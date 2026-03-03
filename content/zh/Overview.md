@@ -1,5 +1,5 @@
 <p align="center">
-    <img src="https://raw.githubusercontent.com/DangoSys/documents/cda031eb5278397b4741a5db2753097c483d84f6/content/zh/images/logo.png" width = "100%" height = "70%">
+    <img src="https://raw.githubusercontent.com/DangoSys/documents/refs/heads/main/content/zh/images/logo.png" width = "100%" height = "70%">
 </p>
 
 <div align="center" style="margin-top: -10pt;">
