@@ -18,7 +18,14 @@
     "translating": "Translating...",
     "path": "File path (e.g. guide.md or folder/page.md)",
     "selectHint": "Select a document from the sidebar.",
-    "doubleClickRename": "Double-click to rename"
+    "doubleClickRename": "Double-click to rename",
+    "manageImages": "Images",
+    "hideImages": "Hide Images",
+    "uploadImage": "Upload Image",
+    "uploading": "Uploading...",
+    "noImages": "No images yet.",
+    "copyLink": "Copy",
+    "confirmDeleteImage": "Delete image \"{{name}}\"?"
   },
   "admin": {
     "title": "Admin Panel",

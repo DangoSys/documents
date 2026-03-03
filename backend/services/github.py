@@ -218,6 +218,103 @@ async def rename_file(locale: str, old_path: str, new_path: str) -> None:
 
 
 # ---------------------------------------------------------------------------
+# Image helpers
+# ---------------------------------------------------------------------------
+
+_IMAGE_EXTS = {".png", ".jpg", ".jpeg", ".gif", ".svg", ".webp", ".bmp", ".ico"}
+
+
+def _images_dir(locale: str, doc_path: str) -> str:
+    """Return the images/ folder path relative to content root for a given doc."""
+    parent = "/".join(doc_path.split("/")[:-1])  # drop the filename
+    if parent:
+        return f"{locale}/{parent}/images"
+    return f"{locale}/images"
+
+
+async def list_images(locale: str, doc_path: str) -> list[dict]:
+    """List image files in the images/ folder next to a document."""
+    token = await get_installation_token()
+    images_prefix = f"{CONTENT_DIR}/{_images_dir(locale, doc_path)}/"
+    url = f"{API}/repos/{GITHUB_REPO}/git/trees/{GITHUB_BRANCH}?recursive=1"
+    async with _client() as client:
+        resp = await client.get(url, headers=_install_headers(token))
+        resp.raise_for_status()
+    results = []
+    for item in resp.json().get("tree", []):
+        if item["type"] != "blob":
+            continue
+        if not item["path"].startswith(images_prefix):
+            continue
+        name = item["path"].split("/")[-1]
+        ext = "." + name.rsplit(".", 1)[-1].lower() if "." in name else ""
+        if ext not in _IMAGE_EXTS:
+            continue
+        rel = item["path"][len(f"{CONTENT_DIR}/"):]
+        results.append({"name": name, "path": rel, "sha": item["sha"]})
+    return results
+
+
+async def put_file_binary(locale: str, path: str, data: bytes, message: str) -> dict:
+    """Upload a binary file to the repo."""
+    token = await get_installation_token()
+    full = _content_path(f"{locale}/{path}")
+    url = f"{API}/repos/{GITHUB_REPO}/contents/{full}"
+    body: dict = {
+        "message": message,
+        "content": base64.b64encode(data).decode(),
+        "branch": GITHUB_BRANCH,
+    }
+    # Check if file already exists to get sha
+    try:
+        async with _client() as client:
+            check = await client.get(
+                f"{url}?ref={GITHUB_BRANCH}", headers=_install_headers(token)
+            )
+            if check.status_code == 200:
+                body["sha"] = check.json()["sha"]
+    except Exception:
+        pass
+    async with _client() as client:
+        resp = await client.put(url, json=body, headers=_install_headers(token))
+        resp.raise_for_status()
+    return resp.json()
+
+
+async def get_file_raw(locale: str, path: str) -> tuple[bytes, str]:
+    """Get raw file bytes and content type from the repo."""
+    token = await get_installation_token()
+    full = _content_path(f"{locale}/{path}")
+    url = f"{API}/repos/{GITHUB_REPO}/contents/{full}?ref={GITHUB_BRANCH}"
+    async with _client() as client:
+        resp = await client.get(url, headers=_install_headers(token))
+        resp.raise_for_status()
+    data = resp.json()
+    content = base64.b64decode(data["content"])
+    name = path.split("/")[-1].lower()
+    ext = name.rsplit(".", 1)[-1] if "." in name else ""
+    mime_map = {
+        "png": "image/png", "jpg": "image/jpeg", "jpeg": "image/jpeg",
+        "gif": "image/gif", "svg": "image/svg+xml", "webp": "image/webp",
+        "bmp": "image/bmp", "ico": "image/x-icon",
+    }
+    content_type = mime_map.get(ext, "application/octet-stream")
+    return content, content_type
+
+
+async def delete_image(locale: str, path: str, sha: str) -> dict:
+    """Delete an image file from the repo."""
+    token = await get_installation_token()
+    full = _content_path(f"{locale}/{path}")
+    url = f"{API}/repos/{GITHUB_REPO}/contents/{full}"
+    body = {"message": f"Delete image {path}", "sha": sha, "branch": GITHUB_BRANCH}
+    async with _client() as client:
+        resp = await client.request("DELETE", url, json=body, headers=_install_headers(token))
+        resp.raise_for_status()
+    return resp.json()
+
+
+# ---------------------------------------------------------------------------
 # config.yaml helpers (for admin management)
 # ---------------------------------------------------------------------------
 

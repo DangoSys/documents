@@ -18,6 +18,7 @@
           pyjwt
           cryptography
           pyyaml
+          python-multipart
           openai
           socksio
         ]);

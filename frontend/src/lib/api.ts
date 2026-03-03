@@ -35,6 +35,12 @@ export interface UserInfo {
   is_admin: boolean;
 }
 
+export interface ImageItem {
+  name: string;
+  path: string;
+  sha: string;
+}
+
 export const api = {
   // Auth
   me: () => request<UserInfo>("/auth/me"),
@@ -80,4 +86,25 @@ export const api = {
       method: "PUT",
       body: JSON.stringify({ admins }),
     }),
+
+  // Images
+  listImages: (locale: string, docPath: string) =>
+    request<{ images: ImageItem[] }>(`/docs/images/${locale}/${docPath}`),
+  uploadImage: async (locale: string, docPath: string, file: File): Promise<{ ok: boolean; name: string }> => {
+    const form = new FormData();
+    form.append("file", file);
+    const res = await fetch(`${BASE}/docs/images/${locale}/${docPath}`, {
+      method: "POST",
+      headers: authHeaders(),
+      body: form,
+    });
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`${res.status}: ${text}`);
+    }
+    return res.json();
+  },
+  deleteImage: (locale: string, imagePath: string, sha: string) =>
+    request<{ ok: boolean }>(`/docs/images/${locale}/${imagePath}?sha=${sha}`, { method: "DELETE" }),
+  imageUrl: (locale: string, imagePath: string) => `${BASE}/docs/image/${locale}/${imagePath}`,
 };

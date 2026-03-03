@@ -18,7 +18,14 @@
     "translating": "翻译中...",
     "path": "文件路径（如 guide.md 或 folder/page.md）",
     "selectHint": "请从左侧目录选择一篇文档。",
-    "doubleClickRename": "双击重命名"
+    "doubleClickRename": "双击重命名",
+    "manageImages": "图片管理",
+    "hideImages": "收起图片",
+    "uploadImage": "上传图片",
+    "uploading": "上传中...",
+    "noImages": "暂无图片。",
+    "copyLink": "复制",
+    "confirmDeleteImage": "确定要删除图片「{{name}}」吗？"
   },
   "admin": {
     "title": "管理面板",
