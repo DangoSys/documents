@@ -1,11 +1,11 @@
-"""Translation via DeepSeek API (OpenAI-compatible)."""
+"""Translation routes."""
 
 from fastapi import APIRouter, Depends, HTTPException
 from openai import AsyncOpenAI
 from pydantic import BaseModel
 
-from .auth import require_admin
-from .config import DEEPSEEK_API_KEY
+from ..auth.deps import require_admin
+from ...config import DEEPSEEK_API_KEY
 
 router = APIRouter(prefix="/api/translate", tags=["translate"])
 

@@ -4,6 +4,18 @@ from pathlib import Path
 import yaml
 
 _BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Load .env file if present
+_env_path = _BASE_DIR / ".env"
+if _env_path.exists():
+    with open(_env_path) as _f:
+        for _line in _f:
+            _line = _line.strip()
+            if not _line or _line.startswith("#") or "=" not in _line:
+                continue
+            _key, _, _val = _line.partition("=")
+            os.environ.setdefault(_key.strip(), _val.strip())
+
 _config_path = _BASE_DIR / "config.yaml"
 
 with open(_config_path, "r") as f:

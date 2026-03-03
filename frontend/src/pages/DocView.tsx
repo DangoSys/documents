@@ -3,6 +3,8 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import rehypeHighlight from "rehype-highlight";
+import "highlight.js/styles/github.css";
 import { api, DocFile } from "../lib/api";
 import { useAuth } from "../lib/auth";
 
@@ -56,6 +58,17 @@ export function DocView() {
     }
   };
 
+  const handleDelete = async () => {
+    if (!doc) return;
+    if (!window.confirm(t("docs.confirmDelete"))) return;
+    try {
+      await api.deleteDoc(currentLocale, path, doc.sha);
+      navigate(`/docs/${currentLocale}`);
+    } catch (e: any) {
+      setError(e.message);
+    }
+  };
+
   if (loading) return <div className="loading">Loading...</div>;
   if (error) return <div className="error">{error}</div>;
   if (!doc) return null;
@@ -65,20 +78,21 @@ export function DocView() {
 
   return (
     <div className="doc-view">
-      <div className="doc-actions">
-        {user?.is_admin && (
-          <>
-            <button onClick={() => navigate(`/edit/${currentLocale}/${path}`)} className="btn">
-              {t("docs.edit")}
-            </button>
-            <button onClick={handleTranslate} className="btn" disabled={translating}>
-              {translating ? t("docs.translating") : t("docs.translateTo", { lang: targetLang })}
-            </button>
-          </>
-        )}
-      </div>
-      <article className="markdown-body">
-        <ReactMarkdown remarkPlugins={[remarkGfm]}>{doc.content}</ReactMarkdown>
+      {user?.is_admin && (
+        <div className="doc-toolbar">
+          <button onClick={() => navigate(`/edit/${currentLocale}/${path}`)} className="btn">
+            {t("docs.edit")}
+          </button>
+          <button onClick={handleTranslate} className="btn" disabled={translating}>
+            {translating ? t("docs.translating") : t("docs.translateTo", { lang: targetLang })}
+          </button>
+          <button onClick={handleDelete} className="btn btn-danger">
+            {t("docs.delete")}
+          </button>
+        </div>
+      )}
+      <article className="vp-doc">
+        <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeHighlight]}>{doc.content}</ReactMarkdown>
       </article>
     </div>
   );

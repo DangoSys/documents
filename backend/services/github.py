@@ -1,12 +1,13 @@
 """GitHub API client – handles both OAuth user identity and App installation writes."""
 
+import base64
 import time
 from pathlib import Path
 
 import httpx
 import jwt as pyjwt
 
-from .config import (
+from ..config import (
     CONTENT_DIR,
     GITHUB_APP_ID,
     GITHUB_APP_PRIVATE_KEY_PATH,
@@ -99,7 +100,6 @@ async def get_file(locale: str, path: str) -> dict:
         resp = await client.get(url, headers=_install_headers(token))
         resp.raise_for_status()
     data = resp.json()
-    import base64
     content = base64.b64decode(data["content"]).decode("utf-8")
     return {"content": content, "sha": data["sha"], "path": data["path"]}
 
@@ -109,7 +109,6 @@ async def put_file(locale: str, path: str, content: str, message: str, sha: str 
     token = await get_installation_token()
     full = _content_path(f"{locale}/{path}")
     url = f"{API}/repos/{GITHUB_REPO}/contents/{full}"
-    import base64
     body: dict = {
         "message": message,
         "content": base64.b64encode(content.encode()).decode(),
@@ -148,7 +147,6 @@ async def get_config_file() -> dict:
         resp = await client.get(url, headers=_install_headers(token))
         resp.raise_for_status()
     data = resp.json()
-    import base64
     content = base64.b64decode(data["content"]).decode("utf-8")
     return {"content": content, "sha": data["sha"]}
 
@@ -157,7 +155,6 @@ async def put_config_file(content: str, sha: str, message: str) -> dict:
     """Update config.yaml in the repo."""
     token = await get_installation_token()
     url = f"{API}/repos/{GITHUB_REPO}/contents/config.yaml"
-    import base64
     body = {
         "message": message,
         "content": base64.b64encode(content.encode()).decode(),

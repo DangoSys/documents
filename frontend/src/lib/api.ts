@@ -63,10 +63,10 @@ export const api = {
       body: JSON.stringify({ content, target_locale: targetLocale }),
     }),
 
-  // Admin
-  getAdmins: () => request<{ admins: string[] }>("/admin/admins"),
+  // Users
+  getAdmins: () => request<{ admins: string[] }>("/users/admins"),
   updateAdmins: (admins: string[]) =>
-    request<{ ok: boolean; admins: string[] }>("/admin/admins", {
+    request<{ ok: boolean; admins: string[] }>("/users/admins", {
       method: "PUT",
       body: JSON.stringify({ admins }),
     }),

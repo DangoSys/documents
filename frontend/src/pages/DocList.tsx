@@ -9,15 +9,11 @@ export function DocList() {
   const currentLocale = locale || "en";
 
   return (
-    <div className="doc-list">
+    <div className="doc-welcome">
       <h1>{t("docs.title")}</h1>
-      <p>
-        {currentLocale === "zh"
-          ? "请从左侧目录选择一篇文档。"
-          : "Select a document from the sidebar."}
-      </p>
+      <p>{t("docs.selectHint")}</p>
       {user?.is_admin && (
-        <Link to={`/docs/${currentLocale}/new`} className="btn btn-primary" style={{ marginTop: 16, display: "inline-block" }}>
+        <Link to={`/docs/${currentLocale}/new`} className="btn btn-brand">
           {t("docs.create")}
         </Link>
       )}

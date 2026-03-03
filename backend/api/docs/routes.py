@@ -1,11 +1,11 @@
-"""Document CRUD API – reads/writes via GitHub API."""
+"""Document CRUD routes."""
 
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 
-from .auth import require_admin
-from .config import SUPPORTED_LOCALES
-from .github_client import delete_file, get_file, get_tree, put_file
+from ..auth.deps import require_admin
+from ...config import SUPPORTED_LOCALES
+from ...services.github import delete_file, get_file, get_tree, put_file
 
 router = APIRouter(prefix="/api/docs", tags=["docs"])
 

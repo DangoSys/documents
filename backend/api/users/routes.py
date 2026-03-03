@@ -1,14 +1,14 @@
-"""Admin management API – manages config.yaml admins list via GitHub API."""
+"""User group management routes."""
 
 import yaml
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 
-from .auth import require_admin
-from .config import ADMINS
-from .github_client import get_config_file, put_config_file
+from ..auth.deps import require_admin
+from ...config import ADMINS
+from ...services.github import get_config_file, put_config_file
 
-router = APIRouter(prefix="/api/admin", tags=["admin"])
+router = APIRouter(prefix="/api/users", tags=["users"])
 
 
 class AdminsUpdate(BaseModel):

@@ -9,44 +9,37 @@ export function AdminLayout() {
   const location = useLocation();
 
   return (
-    <div className="admin-layout">
-      <header className="topbar">
-        <Link to="/docs/en" className="logo">
-          Buckyball Docs
-        </Link>
-        <div className="topbar-actions">
+    <>
+      <header className="nav">
+        <div className="nav-left">
+          <Link to="/docs/en" className="nav-title">Buckyball Docs</Link>
+        </div>
+        <div className="nav-right">
           <LangSwitch />
           {user && (
-            <div className="user-menu">
-              <img src={user.avatar_url} alt="" className="avatar" />
+            <div className="nav-user">
+              <img src={user.avatar_url} alt="" className="nav-avatar" />
               <span>{user.login}</span>
-              <Link to="/docs/en" className="btn-link">
-                {t("nav.docs")}
-              </Link>
-              <button onClick={logout} className="btn-link">
-                {t("nav.logout")}
-              </button>
+              <Link to="/docs/en" className="nav-link">{t("nav.docs")}</Link>
+              <button onClick={logout} className="nav-link">{t("nav.logout")}</button>
             </div>
           )}
         </div>
       </header>
-      <div className="admin-main">
-        <nav className="admin-sidebar">
+      <div className="admin-layout-wrap">
+        <nav className="admin-side">
           <ul>
             <li>
-              <Link
-                to="/admin"
-                className={location.pathname === "/admin" ? "active" : ""}
-              >
+              <Link to="/admin" className={location.pathname === "/admin" ? "active" : ""}>
                 {t("admin.manageAdmins")}
               </Link>
             </li>
           </ul>
         </nav>
-        <main className="admin-content">
+        <main className="admin-page">
           <Outlet />
         </main>
       </div>
-    </div>
+    </>
   );
 }

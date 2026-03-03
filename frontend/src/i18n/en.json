@@ -16,7 +16,8 @@
     "confirmDelete": "Are you sure you want to delete this document?",
     "translateTo": "Translate to {{lang}}",
     "translating": "Translating...",
-    "path": "File path (e.g. guide.md or folder/page.md)"
+    "path": "File path (e.g. guide.md or folder/page.md)",
+    "selectHint": "Select a document from the sidebar."
   },
   "admin": {
     "title": "Admin Panel",

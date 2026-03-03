@@ -41,7 +41,7 @@ function TreeNodeView({ node, locale }: { node: TreeNode; locale: string }) {
       <li>
         <Link
           to={`/docs/${locale}/${node.path}`}
-          className={`sidebar-link${isActive ? " active" : ""}`}
+          className={`sidebar-item${isActive ? " active" : ""}`}
         >
           {node.name.replace(/\.md$/, "")}
         </Link>
@@ -51,7 +51,7 @@ function TreeNodeView({ node, locale }: { node: TreeNode; locale: string }) {
 
   return (
     <li>
-      <span className="sidebar-folder">{node.name}</span>
+      <span className="sidebar-group">{node.name}</span>
       <ul>
         {node.children.map((child) => (
           <TreeNodeView key={child.path} node={child} locale={locale} />

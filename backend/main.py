@@ -5,11 +5,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
-from .admin import router as admin_router
-from .auth import router as auth_router
+from .api.auth.routes import router as auth_router
+from .api.docs.routes import router as docs_router
+from .api.translate.routes import router as translate_router
+from .api.users.routes import router as users_router
 from .config import FRONTEND_URL
-from .docs import router as docs_router
-from .translate import router as translate_router
 
 app = FastAPI(title="Buckyball Documents API")
 
@@ -24,7 +24,7 @@ app.add_middleware(
 app.include_router(auth_router)
 app.include_router(docs_router)
 app.include_router(translate_router)
-app.include_router(admin_router)
+app.include_router(users_router)
 
 
 @app.get("/api/health")
