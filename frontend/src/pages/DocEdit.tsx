@@ -156,76 +156,78 @@ export function DocEdit() {
           />
         )}
         {error && <div className="error">{error}</div>}
-      </div>
-      <div className="edit-wrap" ref={wrapRef} />
-
-      {/* Image management panel */}
-      {!isNew && (
-        <div className="image-panel">
-          <button
-            className="btn btn-sm"
-            onClick={() => setImagesPanelOpen((v) => !v)}
-          >
-            {imagesPanelOpen ? t("docs.hideImages") : t("docs.manageImages")}
-          </button>
-          {imagesPanelOpen && (
-            <div className="image-panel-body">
-              <div className="image-upload-row">
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  style={{ display: "none" }}
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) handleUpload(file);
-                    e.target.value = "";
-                  }}
-                />
-                <button
-                  className="btn btn-sm btn-brand"
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={uploading}
-                >
-                  {uploading ? t("docs.uploading") : t("docs.uploadImage")}
-                </button>
-              </div>
-              {images.length === 0 ? (
-                <div className="image-empty">{t("docs.noImages")}</div>
-              ) : (
-                <div className="image-grid">
-                  {images.map((img) => (
-                    <div key={img.path} className="image-card">
-                      <img
-                        src={api.imageUrl(currentLocale, img.path)}
-                        alt={img.name}
-                        className="image-thumb"
-                      />
-                      <div className="image-name" title={img.name}>{img.name}</div>
-                      <div className="image-actions">
-                        <button
-                          className="btn btn-sm"
-                          onClick={() => copyMarkdownLink(img)}
-                          title={t("docs.copyLink")}
-                        >
-                          {t("docs.copyLink")}
-                        </button>
-                        <button
-                          className="btn btn-sm btn-danger"
-                          onClick={() => handleDeleteImage(img)}
-                        >
-                          {t("docs.delete")}
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+        {/* Image management: toggle + upload in header row, grid below */}
+        {!isNew && (
+          <div className="image-panel">
+            <div className="image-panel-header">
+              <button
+                className="btn btn-sm"
+                onClick={() => setImagesPanelOpen((v) => !v)}
+              >
+                {imagesPanelOpen ? t("docs.hideImages") : t("docs.manageImages")}
+              </button>
+              {imagesPanelOpen && (
+                <>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    style={{ display: "none" }}
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) handleUpload(file);
+                      e.target.value = "";
+                    }}
+                  />
+                  <button
+                    className="btn btn-sm btn-brand"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploading}
+                  >
+                    {uploading ? t("docs.uploading") : t("docs.uploadImage")}
+                  </button>
+                </>
               )}
             </div>
-          )}
-        </div>
-      )}
-
+            {imagesPanelOpen && (
+              <div className="image-panel-body">
+                {images.length === 0 ? (
+                  <div className="image-empty">{t("docs.noImages")}</div>
+                ) : (
+                  <div className="image-grid">
+                    {images.map((img) => (
+                      <div key={img.path} className="image-card">
+                        <img
+                          src={api.imageUrl(currentLocale, img.path)}
+                          alt={img.name}
+                          className="image-thumb"
+                        />
+                        <div className="image-name" title={img.name}>{img.name}</div>
+                        <div className="image-actions">
+                          <button
+                            className="btn btn-sm"
+                            onClick={() => copyMarkdownLink(img)}
+                            title={t("docs.copyLink")}
+                          >
+                            {t("docs.copyLink")}
+                          </button>
+                          <button
+                            className="btn btn-sm btn-danger"
+                            onClick={() => handleDeleteImage(img)}
+                          >
+                            {t("docs.delete")}
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+      <div className="edit-wrap" ref={wrapRef} />
       <div className="edit-actions">
         <button onClick={handleSave} className="btn btn-brand" disabled={saving}>
           {t("docs.save")}

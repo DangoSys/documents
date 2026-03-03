@@ -351,17 +351,24 @@ a:hover { color: var(--c-brand-light); }
 /* ===================== Image panel ===================== */
 
 .image-panel {
-  flex-shrink: 0;
-  border-top: 1px solid var(--c-divider);
-  padding-top: 8px;
-  margin-top: 8px;
+  border: 1px solid var(--c-divider);
+  border-radius: 6px;
+  padding: 8px;
 }
 
-.image-panel-body { padding-top: 8px; }
+.image-panel-header {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
 
-.image-upload-row { margin-bottom: 8px; }
+.image-panel-body {
+  padding-top: 8px;
+  max-height: 200px;
+  overflow-y: auto;
+}
 
-.image-empty { font-size: 13px; color: var(--c-text-3); padding: 8px 0; }
+.image-empty { font-size: 13px; color: var(--c-text-3); padding: 4px 0; }
 
 .image-grid {
   display: flex;
