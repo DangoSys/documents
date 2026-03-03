@@ -4,7 +4,7 @@ import httpx
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import RedirectResponse
 
-from ...config import ADMINS, FRONTEND_URL, GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET
+from ...config import ADMINS, FRONTEND_URL, GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET, PROXY
 from ...services.github import get_github_user
 from .deps import create_token, get_current_user
 
@@ -23,7 +23,7 @@ async def login():
 
 @router.get("/callback")
 async def callback(code: str):
-    async with httpx.AsyncClient() as client:
+    async with (httpx.AsyncClient(proxy=PROXY) if PROXY else httpx.AsyncClient()) as client:
         resp = await client.post(
             "https://github.com/login/oauth/access_token",
             json={"client_id": GITHUB_CLIENT_ID, "client_secret": GITHUB_CLIENT_SECRET, "code": code},

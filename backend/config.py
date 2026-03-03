@@ -40,3 +40,4 @@ JWT_SECRET: str = os.environ.get("JWT_SECRET", "change-me")
 DEEPSEEK_API_KEY: str = os.environ.get("DEEPSEEK_API_KEY", "")
 
 FRONTEND_URL: str = os.environ.get("FRONTEND_URL", "http://localhost:5173")
+PROXY: str = os.environ.get("HTTPS_PROXY", "") or os.environ.get("ALL_PROXY", "")

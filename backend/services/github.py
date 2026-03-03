@@ -14,9 +14,13 @@ from ..config import (
     GITHUB_APP_PRIVATE_KEY_PATH,
     GITHUB_BRANCH,
     GITHUB_REPO,
+    PROXY,
 )
 
 API = "https://api.github.com"
+
+def _client() -> httpx.AsyncClient:
+    return httpx.AsyncClient(proxy=PROXY) if PROXY else httpx.AsyncClient()
 
 # ---------------------------------------------------------------------------
 # Installation token (for writing to the repo via GitHub App)
@@ -36,7 +40,7 @@ def _app_jwt() -> str:
 
 async def _get_installation_id() -> int:
     token = _app_jwt()
-    async with httpx.AsyncClient() as client:
+    async with _client() as client:
         resp = await client.get(
             f"{API}/repos/{GITHUB_REPO}/installation",
             headers={"Authorization": f"Bearer {token}", "Accept": "application/vnd.github+json"},
@@ -51,7 +55,7 @@ async def get_installation_token() -> str:
         return _installation_token
     installation_id = await _get_installation_id()
     token = _app_jwt()
-    async with httpx.AsyncClient() as client:
+    async with _client() as client:
         resp = await client.post(
             f"{API}/app/installations/{installation_id}/access_tokens",
             headers={"Authorization": f"Bearer {token}", "Accept": "application/vnd.github+json"},
@@ -80,7 +84,7 @@ async def get_tree(locale: str) -> list[dict]:
     """Return the file tree under content/<locale>/ recursively, sorted by .order.json."""
     token = await get_installation_token()
     url = f"{API}/repos/{GITHUB_REPO}/git/trees/{GITHUB_BRANCH}?recursive=1"
-    async with httpx.AsyncClient() as client:
+    async with _client() as client:
         resp = await client.get(url, headers=_install_headers(token))
         resp.raise_for_status()
     prefix = f"{CONTENT_DIR}/{locale}/"
@@ -112,7 +116,7 @@ async def get_order() -> list[str]:
     token = await get_installation_token()
     url = f"{API}/repos/{GITHUB_REPO}/contents/{_ORDER_PATH}?ref={GITHUB_BRANCH}"
     try:
-        async with httpx.AsyncClient() as client:
+        async with _client() as client:
             resp = await client.get(url, headers=_install_headers(token))
             resp.raise_for_status()
         data = resp.json()
@@ -127,7 +131,7 @@ async def get_order_with_sha() -> tuple[list[str], str | None]:
     token = await get_installation_token()
     url = f"{API}/repos/{GITHUB_REPO}/contents/{_ORDER_PATH}?ref={GITHUB_BRANCH}"
     try:
-        async with httpx.AsyncClient() as client:
+        async with _client() as client:
             resp = await client.get(url, headers=_install_headers(token))
             resp.raise_for_status()
         data = resp.json()
@@ -151,7 +155,7 @@ async def put_order(order: list[str]) -> None:
     _, sha = await get_order_with_sha()
     if sha:
         body["sha"] = sha
-    async with httpx.AsyncClient() as client:
+    async with _client() as client:
         resp = await client.put(url, json=body, headers=_install_headers(token))
         resp.raise_for_status()
 
@@ -161,7 +165,7 @@ async def get_file(locale: str, path: str) -> dict:
     token = await get_installation_token()
     full = _content_path(f"{locale}/{path}")
     url = f"{API}/repos/{GITHUB_REPO}/contents/{full}?ref={GITHUB_BRANCH}"
-    async with httpx.AsyncClient() as client:
+    async with _client() as client:
         resp = await client.get(url, headers=_install_headers(token))
         resp.raise_for_status()
     data = resp.json()
@@ -181,7 +185,7 @@ async def put_file(locale: str, path: str, content: str, message: str, sha: str 
     }
     if sha:
         body["sha"] = sha
-    async with httpx.AsyncClient() as client:
+    async with _client() as client:
         resp = await client.put(url, json=body, headers=_install_headers(token))
         resp.raise_for_status()
     return resp.json()
@@ -193,7 +197,7 @@ async def delete_file(locale: str, path: str, sha: str, message: str) -> dict:
     full = _content_path(f"{locale}/{path}")
     url = f"{API}/repos/{GITHUB_REPO}/contents/{full}"
     body = {"message": message, "sha": sha, "branch": GITHUB_BRANCH}
-    async with httpx.AsyncClient() as client:
+    async with _client() as client:
         resp = await client.request("DELETE", url, json=body, headers=_install_headers(token))
         resp.raise_for_status()
     return resp.json()
@@ -222,7 +226,7 @@ async def get_config_file() -> dict:
     """Get config.yaml content and sha from the repo."""
     token = await get_installation_token()
     url = f"{API}/repos/{GITHUB_REPO}/contents/config.yaml?ref={GITHUB_BRANCH}"
-    async with httpx.AsyncClient() as client:
+    async with _client() as client:
         resp = await client.get(url, headers=_install_headers(token))
         resp.raise_for_status()
     data = resp.json()
@@ -240,7 +244,7 @@ async def put_config_file(content: str, sha: str, message: str) -> dict:
         "sha": sha,
         "branch": GITHUB_BRANCH,
     }
-    async with httpx.AsyncClient() as client:
+    async with _client() as client:
         resp = await client.put(url, json=body, headers=_install_headers(token))
         resp.raise_for_status()
     return resp.json()
@@ -253,7 +257,7 @@ async def put_config_file(content: str, sha: str, message: str) -> dict:
 
 async def get_github_user(access_token: str) -> dict:
     """Get GitHub user info from an OAuth access token."""
-    async with httpx.AsyncClient() as client:
+    async with _client() as client:
         resp = await client.get(
             f"{API}/user",
             headers={"Authorization": f"token {access_token}", "Accept": "application/vnd.github+json"},
