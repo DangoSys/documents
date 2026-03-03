@@ -48,7 +48,6 @@
           program = let
             script = pkgs.writeShellScript "run-documents" ''
               set -e
-              cd "$(dirname "$0")/.."
 
               # Check .env
               if [ ! -f .env ]; then

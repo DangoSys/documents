@@ -7,8 +7,7 @@ Online visual document management system for Buckyball's markdown documentation.
 ### 1. Enter dev environment
 
 ```bash
-cd /home/mio/Code/buckyball/documents
-git add -A
+cd documents
 nix develop
 ```
 
@@ -28,7 +27,7 @@ pnpm dev
 ### 4. Run backend (in another terminal, also inside `nix develop`)
 
 ```bash
-cd /home/mio/Code/buckyball/documents
+cd documents
 nix develop
 uvicorn backend.main:app --reload
 ```
