@@ -171,7 +171,31 @@ a:hover { color: var(--c-brand-light); }
   font-weight: 700;
   color: var(--c-text);
   letter-spacing: .02em;
+  border-radius: 4px;
+  transition: background .15s;
 }
+.sidebar-group.drag-over { background: rgba(52,81,178,.08); outline: 1px dashed var(--c-brand); }
+
+/* Drag-and-drop indicators */
+.sidebar li.drop-before { box-shadow: 0 -2px 0 0 var(--c-brand); }
+.sidebar li.drop-after { box-shadow: 0 2px 0 0 var(--c-brand); }
+.sidebar li.drop-inside > .sidebar-group { background: rgba(52,81,178,.08); outline: 1px dashed var(--c-brand); }
+
+.sidebar-rename-input {
+  display: block;
+  width: calc(100% - 24px);
+  margin: 2px 12px;
+  padding: 2px 8px;
+  font-size: 13px;
+  border: 1px solid var(--c-brand);
+  border-radius: 4px;
+  outline: none;
+  background: var(--c-bg);
+  color: var(--c-text);
+}
+
+.sidebar-item[draggable="true"] { cursor: grab; }
+.sidebar-item[draggable="true"]:active { cursor: grabbing; }
 
 /* ===================== Content area ===================== */
 
@@ -185,7 +209,8 @@ a:hover { color: var(--c-brand-light); }
 /* ===================== Doc view ===================== */
 
 .doc-view {
-  max-width: 688px;
+  max-width: 768px;
+  margin: 0 auto;
 }
 
 .doc-toolbar {
@@ -312,10 +337,9 @@ a:hover { color: var(--c-brand-light); }
   height: calc(100% - 38px) !important;
 }
 
-.edit-wrap .bytemd-preview,
-.edit-wrap .bytemd-split { display: none !important; }
 .edit-wrap .bytemd-editor { width: 100% !important; height: 100% !important; }
 .edit-wrap .bytemd-editor .CodeMirror { height: 100% !important; }
+.edit-wrap .bytemd-preview .markdown-body { height: 100% !important; overflow-y: auto !important; }
 
 .edit-actions {
   flex-shrink: 0;

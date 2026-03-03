@@ -1,6 +1,7 @@
 """GitHub API client – handles both OAuth user identity and App installation writes."""
 
 import base64
+import json
 import time
 from pathlib import Path
 
@@ -76,7 +77,7 @@ def _content_path(path: str) -> str:
 
 
 async def get_tree(locale: str) -> list[dict]:
-    """Return the file tree under content/<locale>/ recursively."""
+    """Return the file tree under content/<locale>/ recursively, sorted by .order.json."""
     token = await get_installation_token()
     url = f"{API}/repos/{GITHUB_REPO}/git/trees/{GITHUB_BRANCH}?recursive=1"
     async with httpx.AsyncClient() as client:
@@ -88,7 +89,71 @@ async def get_tree(locale: str) -> list[dict]:
         if item["path"].startswith(prefix) and item["path"].endswith(".md"):
             rel = item["path"][len(prefix):]
             items.append({"path": rel, "type": item["type"]})
+    # Apply custom ordering
+    order = await get_order()
+    if order:
+        order_map = {name: idx for idx, name in enumerate(order)}
+        def sort_key(item: dict) -> tuple:
+            parts = item["path"].split("/")
+            return tuple(order_map.get(p, 9999) for p in parts)
+        items.sort(key=sort_key)
     return items
+
+
+# ---------------------------------------------------------------------------
+# Order file (.order.json) – stores sidebar sort order
+# ---------------------------------------------------------------------------
+
+_ORDER_PATH = f"{CONTENT_DIR}/.order.json"
+
+
+async def get_order() -> list[str]:
+    """Get the ordering list from .order.json. Returns [] if not found."""
+    token = await get_installation_token()
+    url = f"{API}/repos/{GITHUB_REPO}/contents/{_ORDER_PATH}?ref={GITHUB_BRANCH}"
+    try:
+        async with httpx.AsyncClient() as client:
+            resp = await client.get(url, headers=_install_headers(token))
+            resp.raise_for_status()
+        data = resp.json()
+        content = base64.b64decode(data["content"]).decode("utf-8")
+        return json.loads(content)
+    except (httpx.HTTPStatusError, json.JSONDecodeError):
+        return []
+
+
+async def get_order_with_sha() -> tuple[list[str], str | None]:
+    """Get the ordering list and its sha. Returns ([], None) if not found."""
+    token = await get_installation_token()
+    url = f"{API}/repos/{GITHUB_REPO}/contents/{_ORDER_PATH}?ref={GITHUB_BRANCH}"
+    try:
+        async with httpx.AsyncClient() as client:
+            resp = await client.get(url, headers=_install_headers(token))
+            resp.raise_for_status()
+        data = resp.json()
+        content = base64.b64decode(data["content"]).decode("utf-8")
+        return json.loads(content), data["sha"]
+    except httpx.HTTPStatusError:
+        return [], None
+
+
+async def put_order(order: list[str]) -> None:
+    """Save the ordering list to .order.json."""
+    token = await get_installation_token()
+    url = f"{API}/repos/{GITHUB_REPO}/contents/{_ORDER_PATH}"
+    content_str = json.dumps(order, ensure_ascii=False, indent=2)
+    body: dict = {
+        "message": "Update sidebar order",
+        "content": base64.b64encode(content_str.encode()).decode(),
+        "branch": GITHUB_BRANCH,
+    }
+    # Get existing sha if file exists
+    _, sha = await get_order_with_sha()
+    if sha:
+        body["sha"] = sha
+    async with httpx.AsyncClient() as client:
+        resp = await client.put(url, json=body, headers=_install_headers(token))
+        resp.raise_for_status()
 
 
 async def get_file(locale: str, path: str) -> dict:
@@ -132,6 +197,20 @@ async def delete_file(locale: str, path: str, sha: str, message: str) -> dict:
         resp = await client.request("DELETE", url, json=body, headers=_install_headers(token))
         resp.raise_for_status()
     return resp.json()
+
+
+async def rename_file(locale: str, old_path: str, new_path: str) -> None:
+    """Rename/move a file, syncing across all locales that have the same path."""
+    from ..config import SUPPORTED_LOCALES
+
+    for loc in SUPPORTED_LOCALES:
+        try:
+            old = await get_file(loc, old_path)
+        except httpx.HTTPStatusError:
+            continue  # file doesn't exist in this locale
+        message = f"Rename {loc}/{old_path} -> {loc}/{new_path}"
+        await put_file(loc, new_path, old["content"], message)
+        await delete_file(loc, old_path, old["sha"], message)
 
 
 # ---------------------------------------------------------------------------

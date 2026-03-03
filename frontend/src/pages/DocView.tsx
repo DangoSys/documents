@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
+import rehypeRaw from "rehype-raw";
 import "highlight.js/styles/github.css";
 import { api, DocFile } from "../lib/api";
 import { useAuth } from "../lib/auth";
@@ -92,7 +93,7 @@ export function DocView() {
         </div>
       )}
       <article className="vp-doc">
-        <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeHighlight]}>{doc.content}</ReactMarkdown>
+        <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw, rehypeHighlight]}>{doc.content}</ReactMarkdown>
       </article>
     </div>
   );

@@ -2,11 +2,10 @@ import { useState } from "react";
 import { Outlet, Link, useParams, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../lib/auth";
-import { LangSwitch } from "./LangSwitch";
 import { Sidebar } from "./Sidebar";
 
 export function Layout() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { user, login, logout } = useAuth();
   const { locale } = useParams();
   const nav = useNavigate();
@@ -15,6 +14,7 @@ export function Layout() {
 
   const switchLocale = (l: string) => {
     nav(window.location.pathname.replace(`/docs/${loc}`, `/docs/${l}`));
+    i18n.changeLanguage(l);
   };
 
   return (
@@ -32,7 +32,6 @@ export function Layout() {
           <button className={`nav-locale-btn${loc === "en" ? " active" : ""}`} onClick={() => switchLocale("en")}>EN</button>
           <button className={`nav-locale-btn${loc === "zh" ? " active" : ""}`} onClick={() => switchLocale("zh")}>中文</button>
           <span className="nav-sep" />
-          <LangSwitch />
           {user ? (
             <div className="nav-user">
               <img src={user.avatar_url} alt="" className="nav-avatar" />

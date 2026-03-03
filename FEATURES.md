@@ -7,8 +7,8 @@
 | 页面 | 路径 | 说明 |
 |------|------|------|
 | 文档首页 | `/docs/:locale` | 侧边栏目录树 + 欢迎提示 |
-| 文档阅读 | `/docs/:locale/*` | Markdown 渲染，管理员可见编辑/翻译/删除按钮 |
-| 文档编辑 | `/edit/:locale/*` | Markdown 编辑器，保存后 commit 到 GitHub |
+| 文档阅读 | `/docs/:locale/*` | Markdown 渲染（支持内嵌 HTML），管理员可见编辑/翻译/删除按钮 |
+| 文档编辑 | `/edit/:locale/*` | ByteMD 编辑器（tab 模式），保存后 commit 到 GitHub |
 | 新建文档 | `/docs/:locale/new` | 输入路径 + 编辑内容 |
 | OAuth 回调 | `/auth/callback` | 存 token 后跳转 |
 | 后台管理 | `/admin` | 管理管理员列表 |
@@ -26,6 +26,9 @@
 | `/api/docs/file/{locale}/{path}` | PUT | 管理员 | 更新文档 |
 | `/api/docs/file/{locale}/{path}` | POST | 管理员 | 新建文档 |
 | `/api/docs/file/{locale}/{path}` | DELETE | 管理员 | 删除文档 |
+| `/api/docs/rename/{locale}/{path}` | POST | 管理员 | 重命名/移动文档（所有语言同步，创建新路径 + 删除旧路径） |
+| `/api/docs/order` | GET | 公开 | 获取侧边栏排序 |
+| `/api/docs/order` | PUT | 管理员 | 更新侧边栏排序（存储在 content/.order.json） |
 | `/api/translate` | POST | 管理员 | 翻译文档 |
 | `/api/users/admins` | GET | 管理员 | 获取管理员列表 |
 | `/api/users/admins` | PUT | 管理员 | 更新管理员列表 |
@@ -35,6 +38,10 @@
 **前台**（所有人可访问）：
 - 浏览文档、切换文档语言（en/zh）、切换 UI 语言
 - 登录后管理员额外可见：编辑、新建、删除、翻译按钮
+- 管理员可在侧边栏双击文件名重命名
+- 管理员可在侧边栏拖拽文件到文件夹移动层级
+- 管理员可在侧边栏拖拽调整文件/文件夹排序
+- 切换 EN/中文 同时切换文档语言和 UI 语言
 
 **后台**（仅管理员，`/admin`）：
 - 管理管理员列表（添加/移除 GitHub 用户名）

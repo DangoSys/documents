@@ -5,7 +5,7 @@ from pydantic import BaseModel
 
 from ..auth.deps import require_admin
 from ...config import SUPPORTED_LOCALES
-from ...services.github import delete_file, get_file, get_tree, put_file
+from ...services.github import delete_file, get_file, get_tree, put_file, rename_file, get_order, put_order
 
 router = APIRouter(prefix="/api/docs", tags=["docs"])
 
@@ -19,6 +19,14 @@ class DocUpdate(BaseModel):
 class DocCreate(BaseModel):
     content: str
     message: str = ""
+
+
+class DocRename(BaseModel):
+    new_path: str
+
+
+class DocOrder(BaseModel):
+    order: list[str]
 
 
 # ---------------------------------------------------------------------------
@@ -65,4 +73,25 @@ async def create_doc(locale: str, path: str, body: DocCreate, _user: dict = Depe
 async def remove_doc(locale: str, path: str, sha: str, _user: dict = Depends(require_admin)):
     message = f"Delete {locale}/{path}"
     await delete_file(locale, path, sha, message)
+    return {"ok": True}
+
+
+@router.post("/rename/{locale}/{path:path}")
+async def rename_doc(locale: str, path: str, body: DocRename, _user: dict = Depends(require_admin)):
+    new_path = body.new_path
+    if not new_path.endswith(".md"):
+        new_path = f"{new_path}.md"
+    await rename_file(locale, path, new_path)
+    return {"ok": True, "new_path": new_path}
+
+
+@router.get("/order")
+async def read_order():
+    order = await get_order()
+    return {"order": order}
+
+
+@router.put("/order")
+async def update_order(body: DocOrder, _user: dict = Depends(require_admin)):
+    await put_order(body.order)
     return {"ok": True}

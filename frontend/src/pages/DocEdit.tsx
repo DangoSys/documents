@@ -43,6 +43,7 @@ export function DocEdit() {
       });
       ed.$on("change", (e: any) => {
         contentRef.current = e.detail.value;
+        ed.$set({ value: e.detail.value });
       });
       editorRef.current = ed;
     });

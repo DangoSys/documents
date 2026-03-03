@@ -55,6 +55,16 @@ export const api = {
     }),
   deleteDoc: (locale: string, path: string, sha: string) =>
     request<{ ok: boolean }>(`/docs/file/${locale}/${path}?sha=${sha}`, { method: "DELETE" }),
+  renameDoc: (locale: string, oldPath: string, newPath: string) =>
+    request<{ ok: boolean; new_path: string }>(`/docs/rename/${locale}/${oldPath}`, {
+      method: "POST",
+      body: JSON.stringify({ new_path: newPath }),
+    }),
+  reorder: (order: string[]) =>
+    request<{ ok: boolean }>("/docs/order", {
+      method: "PUT",
+      body: JSON.stringify({ order }),
+    }),
 
   // Translate
   translate: (content: string, targetLocale: string) =>

@@ -17,7 +17,8 @@
     "translateTo": "Translate to {{lang}}",
     "translating": "Translating...",
     "path": "File path (e.g. guide.md or folder/page.md)",
-    "selectHint": "Select a document from the sidebar."
+    "selectHint": "Select a document from the sidebar.",
+    "doubleClickRename": "Double-click to rename"
   },
   "admin": {
     "title": "Admin Panel",

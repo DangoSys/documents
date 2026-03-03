@@ -17,7 +17,8 @@
     "translateTo": "翻译为{{lang}}",
     "translating": "翻译中...",
     "path": "文件路径（如 guide.md 或 folder/page.md）",
-    "selectHint": "请从左侧目录选择一篇文档。"
+    "selectHint": "请从左侧目录选择一篇文档。",
+    "doubleClickRename": "双击重命名"
   },
   "admin": {
     "title": "管理面板",
