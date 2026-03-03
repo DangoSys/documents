@@ -1,0 +1,14 @@
+site:
+  title: "Buckyball Documents"
+  default_locale: "en"
+  supported_locales:
+    - "en"
+    - "zh"
+
+admins:
+  - "mio-19"
+
+github:
+  repo: "DangoSys/documents"
+  branch: "main"
+  content_dir: "content"
