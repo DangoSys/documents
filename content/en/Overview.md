@@ -2,7 +2,7 @@
     <img src="https://raw.githubusercontent.com/DangoSys/documents/refs/heads/main/content/zh/images/logo.png" width = "100%" height = "70%">
 </p>
 
-## What is Buckyball
+### What is Buckyball
 
 Buckyball is a scalable framework for Domain Specific Architecture, built on RISC-V architecture and optimized for high-performance computing and machine learning accelerator design.
 
