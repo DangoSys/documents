@@ -72,8 +72,6 @@ FIELD(val, start_bit, end_bit)
 
 </details>
 
----
-
 ## 指令速查
 
 <div align="center">
@@ -101,7 +99,6 @@ FIELD(val, start_bit, end_bit)
 
 </div>
 
----
 
 ## Mem 域指令
 
@@ -202,8 +199,6 @@ bb_mvout(mem_addr, bank_id, depth, stride)
 
 </details>
 
----
-
 ## Frontend 域指令
 
 <details open>
@@ -218,8 +213,6 @@ bb_fence()
 rs1 = 0, rs2 = 0。无 Bank 操作，无参数。
 
 </details>
-
----
 
 ## Ball 域指令
 
@@ -342,8 +335,6 @@ bb_dequant(bank_id, wr_bank_id, iter, scale_fp32)
 
 </details>
 
----
-
 ## Gemmini 脉动阵列指令
 
 > Gemmini 指令组共享 **Ball ID = 7**。硬件解码器在 `special[3:0]` 注入子命令标识，
@@ -440,8 +431,6 @@ bb_gemmini_flush()
 rs1 = 0, rs2 = 0。`special[3:0]` = `FLUSH = 4`。
 
 </details>
-
----
 
 ## 硬件解码流程
 
