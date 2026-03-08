@@ -1,6 +1,7 @@
 [
+  "Overview",
   "Overview.md",
-  "Buckyball ISA.md",
   "Tutorial",
-  "Building Your Own Hardware Designs.md"
+  "Building Your Own Hardware Designs.md",
+  "Buckyball ISA.md"
 ]
