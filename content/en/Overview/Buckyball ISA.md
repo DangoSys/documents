@@ -78,8 +78,6 @@ FIELD(val, start_bit, end_bit)
 
 | funct7 | Instruction | Domain | Banks | rs2 |
 |:------:|-------------|:------:|:-----:|-----|
-| `21` | `bb_shared_mvin` | Mem | W | addr + stride |
-| `22` | `bb_shared_mvout` | Mem | R | addr + stride |
 | `23` | `bb_mset` | Mem | W | row + col + alloc |
 | `24` | `bb_mvin` | Mem | W | addr + stride |
 | `25` | `bb_mvout` | Mem | R | addr + stride |
@@ -101,48 +99,12 @@ FIELD(val, start_bit, end_bit)
 
 ## Mem Domain Instructions
 
-<details open>
-<summary><b><code>bb_shared_mvin</code> — Shared Memory Load &nbsp;&nbsp; <code>funct7 = 21</code></b></summary>
-
-Load data from DRAM into a **shared** SRAM bank.
-
-```c
-bb_shared_mvin(mem_addr, bank_id, depth, stride)
-```
-
-| Reg | Field | Bits | Description |
-|:---:|-------|:----:|-------------|
-| rs1 | `bank_0` | `[14:0]` | Target bank ID |
-| rs1 | `wr_valid` | `[47]` | Write enable |
-| rs1 | `iter` | `[63:48]` | Number of rows to load |
-| rs2 | `mem_addr` | `[38:0]` | DRAM virtual address (39-bit) |
-| rs2 | `stride` | `[57:39]` | Row stride (bytes) |
-
-</details>
-
-<details>
-<summary><b><code>bb_shared_mvout</code> — Shared Memory Store &nbsp;&nbsp; <code>funct7 = 22</code></b></summary>
-
-Store data from a **shared** SRAM bank back to DRAM.
-
-```c
-bb_shared_mvout(mem_addr, bank_id, depth, stride)
-```
-
-| Reg | Field | Bits | Description |
-|:---:|-------|:----:|-------------|
-| rs1 | `bank_0` | `[14:0]` | Source bank ID |
-| rs1 | `rd0_valid` | `[45]` | Read enable |
-| rs1 | `iter` | `[63:48]` | Number of rows to store |
-| rs2 | `mem_addr` | `[38:0]` | DRAM virtual address |
-| rs2 | `stride` | `[57:39]` | Row stride |
-
-</details>
-
 <details>
 <summary><b><code>bb_mset</code> — Bank Allocate/Release &nbsp;&nbsp; <code>funct7 = 23</code></b></summary>
 
 Allocate or release SRAM bank space.
+
+`bank_id <= 31` targets private memory, while `bank_id > 31` targets shared memory.
 
 ```c
 bb_mset(bank_id, alloc, row, col)
@@ -163,7 +125,7 @@ bb_mem_release(bank_id)           // Shorthand for alloc=0
 <details>
 <summary><b><code>bb_mvin</code> — Private Memory Load &nbsp;&nbsp; <code>funct7 = 24</code></b></summary>
 
-Load data from DRAM into a **private** SRAM bank. Encoding identical to `bb_shared_mvin`; hardware distinguishes shared/private by funct7.
+Load data from DRAM into SRAM. Hardware selects backend by `bank_id`: `<= 31` is private, `> 31` is shared.
 
 ```c
 bb_mvin(mem_addr, bank_id, depth, stride)
@@ -182,7 +144,7 @@ bb_mvin(mem_addr, bank_id, depth, stride)
 <details>
 <summary><b><code>bb_mvout</code> — Private Memory Store &nbsp;&nbsp; <code>funct7 = 25</code></b></summary>
 
-Store data from a **private** SRAM bank back to DRAM. Encoding identical to `bb_shared_mvout`.
+Store data from SRAM back to DRAM. Hardware selects backend by `bank_id`: `<= 31` is private, `> 31` is shared.
 
 ```c
 bb_mvout(mem_addr, bank_id, depth, stride)
