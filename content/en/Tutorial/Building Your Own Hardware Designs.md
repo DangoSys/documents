@@ -1,11 +1,5 @@
 # Tutorial for buckyball
 
-> by - Bohan Wang
->
-> This document will be gradually updated as the author continues to solve and summarize encountered issues.
-
-> **Update Notice (2026-03-17)**: This tutorial uses single-core Toy configuration as example. Buckyball now supports multi-core Goban architecture. See "Goban Multi-Core Architecture" guide for details. Latest ISA encoding updates (funct7 structured design) have been applied to relevant sections.
-
 This document explains the step-by-step process and problem-solving approaches for a complete `buckyball` development workflow. We use building a ball operator module for executing the `relu()` function as an example:
 
 First, we need to complete the hardware code writing for this module, i.e., write hardware code in Scala's Chisel language and generate corresponding `verilog` code.
