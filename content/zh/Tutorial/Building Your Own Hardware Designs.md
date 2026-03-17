@@ -1,11 +1,5 @@
 # buckyball 教程
 
-> 作者 - Bohan Wang
->
-> 本文档将随着作者不断解决问题和总结而持续更新。
-
-> **更新注意（2026-03-17）**: 本教程以单核 Toy 配置为例。Buckyball 现已支持多核 Goban 架构。详见《Goban Multi-Core Architecture》文档。此外，最近的 ISA 编码更新（funct7 结构化设计）已应用于此文档的相关部分。
-
 本文档讲解一个完整的 `buckyball` 开发流程的步骤和问题解决思路。我们以构建一个执行 `relu()` 函数的球算子模块为例：
 
 首先，需要完成该模块的硬件代码编写，即用 Scala 的 Chisel 语言编写硬件代码，并生成对应的 `verilog` 代码。
