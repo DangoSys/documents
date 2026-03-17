@@ -10,7 +10,7 @@
 
 ## funct7 编码方案
 
-最新编码采用结构化设计：**funct7[6:4] = enable 位，funct7[3:0] = opcode**
+**funct7[6:4] = enable 位，funct7[3:0] = opcode**
 
 - **enable=000**：无 Bank 访问（Frontend 或配置指令）
 - **enable=001**：单读操作
