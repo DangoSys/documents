@@ -48,8 +48,6 @@ source env.sh
 val RELU = BitPat("b0110010") // funct7 = 50 (0x32) — enable=011, opcode=2
 ```
 
-> **注意**：ISA 编码规范已于最近更新。最新的 funct7 值请参考 `arch/src/main/scala/examples/toy/balldomain/DISA.scala`。
-
 #### 2. 将 ReLU 指令添加到 Ball 域解码器
 
 `arch/src/main/scala/examples/toy/balldomain/DomainDecoder.scala` 是 Ball 域解码器。
