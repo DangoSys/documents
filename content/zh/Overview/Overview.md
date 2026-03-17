@@ -38,6 +38,11 @@ nix develop
 bbdev verilator --run '--jobs 16 --binary ctest_vecunit_matmul_ones_singlecore-baremetal --config sims.verilator.BuckyballToyVerilatorConfig --batch'
 ```
 
+对于多核测试，尝试 Goban 配置：
+```bash
+bbdev verilator --run '--binary barrier_test-baremetal --config sims.verilator.BuckyballGobanVerilatorConfig --batch'
+```
+
 
 <!-- ### Buckyball 作为库
   我们支持提供精简版的 buckyball 安装，将其作为 Chipyard 内的一个生成器集成。
@@ -47,6 +52,26 @@ bbdev verilator --run '--jobs 16 --binary ctest_vecunit_matmul_ones_singlecore-b
 
 > 我们不为此版本提供支持，因为它不是稳定版本。 -->
 
+## 架构与核心概念
+
+Buckyball 的模块化架构支持灵活的硬件加速器设计：
+
+### 核心组件
+
+- **Ball**: 可定制的加速器模块（例如，用于矩阵运算的 GemminiBall）
+- **Blink**: Ball 指令分发和结果处理的标准接口
+- **BBTile**: 包含与加速器和共享内存配对的 Rocket 核的瓦片
+- **BarrierUnit**: 用于多核工作负载的硬件同步原语
+
+### 配置模型
+
+- **Toy**: 用于开发和测试的单核参考配置
+- **Goban**: 支持 SPMD 并行工作负载和硬件屏障的多核配置
+
+有关详细的架构信息，请参阅：
+- [Buckyball ISA Documentation](Buckyball%20ISA.md)
+- [Goban 多核架构](../Guide/Goban%20Multi-Core%20Architecture.md)
+- [GemminiBall 架构](../Guide/GemminiBall%20Architecture.md)
 
 ## 教程
 您可以从[这里](https://github.com/DangoSys/buckyball/blob/main/docs/bb-note/src/tutorial/tutorial.md)开始学习 ball 和 blink。
