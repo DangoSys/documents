@@ -100,7 +100,23 @@ bbdev verilator --run \
 Available configurations in `sims/verilator/`:
 
 - `BuckyballToyVerilatorConfig`: Single-core configuration for unit testing
+- `BuckyballGobanVerilatorConfig`: Multi-core configuration (1 tile, 4 cores) with shared accelerators
+- `BuckyballGoban2TileVerilatorConfig`: Multi-tile configuration (2 tiles, 8 cores) for SPMD workloads
 - Custom configs: Define in Scala configuration files
+
+**Multi-core Simulation:**
+
+For Goban-based configurations, workloads must implement SPMD patterns with hardware barrier synchronization:
+
+```bash
+# Run Goban multi-core test
+bbdev verilator --run \
+  '--binary barrier_test-baremetal \
+    --config sims.verilator.BuckyballGobanVerilatorConfig \
+    --batch'
+```
+
+See [Goban Multi-Core Architecture](Goban%20Multi-Core%20Architecture.md) for detailed multi-core programming guidance.
 
 ## Code Organization
 

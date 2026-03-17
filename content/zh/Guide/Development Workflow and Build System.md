@@ -100,7 +100,23 @@ bbdev verilator --run \
 `sims/verilator/` 中的可用配置：
 
 - `BuckyballToyVerilatorConfig`: 用于单元测试的单核配置
+- `BuckyballGobanVerilatorConfig`: 多核配置（1 瓦片，4 核）具有共享加速器
+- `BuckyballGoban2TileVerilatorConfig`: 多瓦片配置（2 瓦片，8 核）用于 SPMD 工作负载
 - 自定义配置: 在 Scala 配置文件中定义
+
+**多核模拟：**
+
+对于基于 Goban 的配置，工作负载必须实现具有硬件屏障同步的 SPMD 模式：
+
+```bash
+# 运行 Goban 多核测试
+bbdev verilator --run \
+  '--binary barrier_test-baremetal \
+    --config sims.verilator.BuckyballGobanVerilatorConfig \
+    --batch'
+```
+
+有关详细的多核编程指南，请参阅 [Goban 多核架构](Goban%20Multi-Core%20Architecture.md)。
 
 ## 代码组织
 
