@@ -8,6 +8,17 @@ Custom instruction set based on RISC-V `CUSTOM_3` (opcode `0x7b`), R-R format
 .insn r CUSTOM_3, 0x3, funct7, x0, rs1, rs2
 ```
 
+## funct7 Encoding Scheme
+
+Latest encoding uses a structured design: **funct7[6:4] = enable bits, funct7[3:0] = opcode**
+
+- **enable=000**: No bank access (Frontend or config instructions)
+- **enable=001**: Single read
+- **enable=010**: Single write
+- **enable=011**: Single read + single write
+- **enable=100**: Dual read + single write
+- **enable=101/110/111**: Extended space (no bank access)
+
 </div>
 
 

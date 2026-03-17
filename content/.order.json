@@ -3,5 +3,9 @@
   "Overview.md",
   "Tutorial",
   "Building Your Own Hardware Designs.md",
-  "Buckyball ISA.md"
+  "Buckyball ISA.md",
+  "Guide",
+  "GemminiBall Architecture.md",
+  "Verilator Simulation and CI.md",
+  "Development Workflow and Build System.md"
 ]

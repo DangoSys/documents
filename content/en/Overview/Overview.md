@@ -39,17 +39,35 @@ Run Verilator simulation test to verify installation:
 bbdev verilator --run '--jobs 16 --binary ctest_vecunit_matmul_ones_singlecore-baremetal --config sims.verilator.BuckyballToyVerilatorConfig --batch'
 ```
 
+For multi-core testing, try the Goban configuration:
+```bash
+bbdev verilator --run '--binary barrier_test-baremetal --config sims.verilator.BuckyballGobanVerilatorConfig --batch'
+```
 
-<!-- ### Buckyball as a library
-  We support providing a streamlined version of buckyball installation, integrated as a generator within Chipyard.
 
-**Notice**:
-- buckyball-as-a-lib are maintained only for specific release versions.
+## Architecture & Key Concepts
 
-> We do not provide support for this version as it is not a stable release. -->
+Buckyball's modular architecture enables flexible hardware accelerator design:
 
+### Core Components
+
+- **Ball**: Customizable accelerator module (e.g., GemminiBall for matrix operations)
+- **Blink**: Standard interface for Ball instruction dispatch and result handling
+- **BBTile**: Tile containing Rocket cores paired with accelerators and shared memory
+- **BarrierUnit**: Hardware synchronization primitive for multi-core workloads
+
+### Configuration Models
+
+- **Toy**: Single-core reference configuration for development and testing
+- **Goban**: Multi-core configuration supporting SPMD parallel workloads with hardware barriers
+
+For detailed architecture information, see:
+- [Buckyball ISA Documentation](Buckyball%20ISA.md)
+- [Goban Multi-Core Architecture](../Guide/Goban%20Multi-Core%20Architecture.md)
+- [GemminiBall Architecture](../Guide/GemminiBall%20Architecture.md)
 
 ## Tutorial
+
 You can start to learn ball and blink from [here](https://github.com/DangoSys/buckyball/blob/main/docs/bb-note/src/tutorial/tutorial.md)
 
 ## Additional Resources

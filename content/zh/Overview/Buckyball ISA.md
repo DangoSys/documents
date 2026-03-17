@@ -7,7 +7,18 @@
 ```
 .insn r CUSTOM_3, 0x3, funct7, x0, rs1, rs2
 ```
-    
+
+## funct7 编码方案
+
+最新编码采用结构化设计：**funct7[6:4] = enable 位，funct7[3:0] = opcode**
+
+- **enable=000**：无 Bank 访问（Frontend 或配置指令）
+- **enable=001**：单读操作
+- **enable=010**：单写操作
+- **enable=011**：单读 + 单写
+- **enable=100**：双读 + 单写
+- **enable=101/110/111**：扩展空间（无 Bank 访问）
+
 </div>
 
 
@@ -76,26 +87,47 @@ FIELD(val, start_bit, end_bit)
 
 <div align="center">
 
-| funct7 | 指令 | 域 | Bank | rs2 |
-|:------:|------|:--:|:----:|-----|
-| `21` | `bb_shared_mvin` | Mem | W | addr + stride |
-| `22` | `bb_shared_mvout` | Mem | R | addr + stride |
-| `23` | `bb_mset` | Mem | W | row + col + alloc |
-| `24` | `bb_mvin` | Mem | W | addr + stride |
-| `25` | `bb_mvout` | Mem | R | addr + stride |
-| `31` | `bb_fence` | FE | -- | 0 |
-| `32` | `bb_mul_warp16` | Ball | RR+W | mode |
-| `33` | `bb_im2col` | Ball | R+W | 卷积参数 |
-| `34` | `bb_transpose` | Ball | R+W | mode |
-| `38` | `bb_relu` | Ball | R+W | 0 |
-| `39` | `bb_BFP` | Ball | RR+W | mode |
-| `40` | `bb_quant` | Ball | R+W | scale\_fp32 |
-| `41` | `bb_dequant` | Ball | R+W | scale\_fp32 |
-| `42` | `bb_gemmini_config` | Ball | -- | 配置参数 |
-| `43` | `bb_gemmini_preload` | Ball | R+W | 0 |
-| `44` | `bb_gemmini_compute_preloaded` | Ball | RR+W | 0 |
-| `45` | `bb_gemmini_compute_accumulated` | Ball | RR+W | 0 |
-| `46` | `bb_gemmini_flush` | Ball | -- | 0 |
+| funct7 | 指令 | 域 | Enable | Bank | rs2 |
+|:------:|------|:--:|:------:|:----:|-----|
+| `0` | `bb_fence` | FE | 000 | -- | 0 |
+| `1` | `bb_barrier` | FE | 000 | -- | 0 |
+| `2` | `bb_gemmini_config` | Ball | 000 | -- | 配置参数 |
+| `3` | `bb_gemmini_flush` | Ball | 000 | -- | 0 |
+| `4` | `bb_bdb_counter` | Ball | 000 | -- | 0 |
+| `16` | `bb_mvout` | Mem | 001 | R | addr + stride |
+| `32` | `bb_mset` | Mem | 010 | W | row + col + alloc |
+| `33` | `bb_mvin` | Mem | 010 | W | addr + stride |
+| `48` | `bb_im2col` | Ball | 011 | R+W | 卷积参数 |
+| `49` | `bb_transpose` | Ball | 011 | R+W | mode |
+| `50` | `bb_relu` | Ball | 011 | R+W | 0 |
+| `51` | `bb_quant` | Ball | 011 | R+W | scale\_fp32 |
+| `52` | `bb_dequant` | Ball | 011 | R+W | scale\_fp32 |
+| `53` | `bb_gemmini_preload` | Ball | 011 | R+W | 0 |
+| `54` | `bb_bdb_backdoor` | Ball | 011 | R+W | -- |
+| `64` | `bb_mul_warp16` | Ball | 100 | RR+W | mode |
+| `65` | `bb_systolic` | Ball | 100 | RR+W | -- |
+| `66` | `bb_gemmini_compute_preloaded` | Ball | 100 | RR+W | 0 |
+| `67` | `bb_gemmini_compute_accumulated` | Ball | 100 | RR+W | 0 |
+| `80` | `bb_gemmini_loop_ws_config_bounds` | Ball | 101 | -- | bounds |
+| `81` | `bb_gemmini_loop_ws_config_addr_a` | Ball | 101 | -- | addr\_a |
+| `82` | `bb_gemmini_loop_ws_config_addr_b` | Ball | 101 | -- | addr\_b |
+| `83` | `bb_gemmini_loop_ws_config_addr_d` | Ball | 101 | -- | addr\_d |
+| `84` | `bb_gemmini_loop_ws_config_addr_c` | Ball | 101 | -- | addr\_c |
+| `85` | `bb_gemmini_loop_ws_config_strides_ab` | Ball | 101 | -- | strides |
+| `86` | `bb_gemmini_loop_ws_config_strides_dc` | Ball | 101 | -- | strides |
+| `87` | `bb_gemmini_loop_ws` | Ball | 101 | -- | 0 |
+| `96` | `bb_gemmini_loop_conv_ws_config_1` | Ball | 110 | -- | conv cfg |
+| `97` | `bb_gemmini_loop_conv_ws_config_2` | Ball | 110 | -- | conv cfg |
+| `98` | `bb_gemmini_loop_conv_ws_config_3` | Ball | 110 | -- | conv cfg |
+| `99` | `bb_gemmini_loop_conv_ws_config_4` | Ball | 110 | -- | conv cfg |
+| `100` | `bb_gemmini_loop_conv_ws_config_5` | Ball | 110 | -- | conv cfg |
+| `101` | `bb_gemmini_loop_conv_ws_config_6` | Ball | 110 | -- | conv cfg |
+| `102` | `bb_gemmini_loop_conv_ws_config_7` | Ball | 110 | -- | conv cfg |
+| `103` | `bb_gemmini_loop_conv_ws_config_8` | Ball | 110 | -- | conv cfg |
+| `104` | `bb_gemmini_loop_conv_ws_config_9` | Ball | 110 | -- | conv cfg |
+| `105` | `bb_gemmini_loop_conv_ws` | Ball | 110 | -- | 0 |
+
+> **更新注意（2026-03-17）**: ISA 编码方案已于最近的提交中进行重大更新。funct7 值、Mem域指令编码已改变。详细的指令级别文档（下面各章节）仍在维护中，某些 funct7 值可能不反映最新代码。请参考 `bb-tests/workloads/lib/bbhw/isa/` 中的实现文件和 `arch/src/main/scala/*/decoder/DISA.scala` 的最新值。
 
 </div>
 

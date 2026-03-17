@@ -4,6 +4,8 @@
 >
 > 本文档将随着作者不断解决问题和总结而持续更新。
 
+> **更新注意（2026-03-17）**: 本教程以单核 Toy 配置为例。Buckyball 现已支持多核 Goban 架构。详见《Goban Multi-Core Architecture》文档。此外，最近的 ISA 编码更新（funct7 结构化设计）已应用于此文档的相关部分。
+
 本文档讲解一个完整的 `buckyball` 开发流程的步骤和问题解决思路。我们以构建一个执行 `relu()` 函数的球算子模块为例：
 
 首先，需要完成该模块的硬件代码编写，即用 Scala 的 Chisel 语言编写硬件代码，并生成对应的 `verilog` 代码。
@@ -48,9 +50,11 @@ source env.sh
 
 在此文件中添加 ReLU 指令的位模式定义：
 
+```scala
+val RELU = BitPat("b0110010") // funct7 = 50 (0x32) — enable=011, opcode=2
 ```
-val RELU_BITPAT = BitPat("b0100110") // func7 = 38 = 0x23
-```
+
+> **注意**：ISA 编码规范已于最近更新。最新的 funct7 值请参考 `arch/src/main/scala/examples/toy/balldomain/DISA.scala`。
 
 #### 2. 将 ReLU 指令添加到 Ball 域解码器
 
@@ -65,7 +69,7 @@ val RELU_BITPAT = BitPat("b0100110") // func7 = 38 = 0x23
   - 其他专用字段 special 等。
 - 内部通过 ListLookup(func7, ...) 将不同的 funct7 指令映射到一组布尔开关和字段提取规则。
 
-在此文件的解码列表中添加 ReLU 指令的解码入口。参考其他指令的实现 (例如 TRANSPOSE_FUNC7 = 38)，需要：
+在此文件的解码列表中添加 ReLU 指令的解码入口。参考其他指令的实现 (例如 TRANSPOSE = 49，enable=011, opcode=1)，需要：
 
 ```
 // 添加到 BallDecodeFields ListLookup
