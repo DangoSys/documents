@@ -10,7 +10,7 @@ Custom instruction set based on RISC-V `CUSTOM_3` (opcode `0x7b`), R-R format
 
 ## funct7 Encoding Scheme
 
-Latest encoding uses a structured design: **funct7[6:4] = enable bits, funct7[3:0] = opcode**
+Encoding: **funct7[6:4] = enable bits, funct7[3:0] = opcode**
 
 - **enable=000**: No bank access (Frontend or config instructions)
 - **enable=001**: Single read
