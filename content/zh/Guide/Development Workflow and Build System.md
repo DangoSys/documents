@@ -264,13 +264,6 @@ nix flake update
 nix develop --impure
 ```
 
-## 最近的变化
-
-- **bbdev 更新**: 改进了工具性能并添加了新的模拟选项
-- **构建系统**: 增强了对工作负载编译的 CMake 支持
-- **Nix 设置**: 为可选合成流程添加了 Yosys 和 OpenSTA
-- **测试框架**: 为新的模拟语义更新了 sardine 框架
-
 ## 参见
 
 - [Verilator 模拟和 CI](Verilator%20Simulation%20and%20CI.md)

@@ -264,13 +264,6 @@ nix flake update
 nix develop --impure
 ```
 
-## Recent Changes
-
-- **bbdev updates**: Improved tool performance and added new simulation options
-- **Build system**: Enhanced CMake support for workload compilation
-- **Nix setup**: Added Yosys and OpenSTA for optional synthesis flows
-- **Test framework**: Updated sardine framework for new simulation semantics
-
 ## See Also
 
 - [Verilator Simulation and CI](Verilator%20Simulation%20and%20CI.md)

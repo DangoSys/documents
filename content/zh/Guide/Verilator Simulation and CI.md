@@ -157,13 +157,6 @@ bbdev verilator --run '--batch --vcd out.vcd --binary <test-binary>'
 bbdev verilator --run '--batch --verbose --binary <test-binary>'
 ```
 
-## 最近的变化
-
-- **上升沿检测**: 改进 `mmio_tick` 去抖和时钟相位处理
-- **内存布局**: 修正 BBSimHarness 链接脚本中的段处理
-- **CI 配置**: 统一测试工作流中的 Verilator 设置
-- **覆盖率支持**: 增强覆盖率驱动验证的信号处理（如果启用）
-
 ## 参见
 
 - [构建自己的硬件设计](../Tutorial/Building%20Your%20Own%20Hardware%20Designs.md)

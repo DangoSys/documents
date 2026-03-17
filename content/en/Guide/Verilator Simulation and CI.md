@@ -157,13 +157,6 @@ Enable verbose simulation output:
 bbdev verilator --run '--batch --verbose --binary <test-binary>'
 ```
 
-## Recent Changes
-
-- **Rising-edge detection**: Improved `mmio_tick` debouncing and clock phase handling
-- **Memory layout**: Corrected section handling in BBSimHarness linker script
-- **CI configuration**: Unified Verilator settings across test workflows
-- **Coverage support**: Enhanced signal handling for coverage-driven verification (if enabled)
-
 ## See Also
 
 - [Building Your Own Hardware Designs](../Tutorial/Building%20Your%20Own%20Hardware%20Designs.md)
