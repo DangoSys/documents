@@ -27,19 +27,29 @@ GemminiBall maintains configuration state via:
 
 ## Instruction Routing by funct7
 
-GemminiBall dispatches instructions based on the `funct7` field:
+GemminiBall dispatches instructions based on the `funct7` field. The field is partitioned as:
 
-| funct7 | Operation | Type |
-|--------|-----------|------|
-| 0x02   | CONFIG    | ExUnit |
-| 0x03   | FLUSH     | ExUnit |
-| 0x35   | PRELOAD   | ExUnit |
-| 0x42   | COMPUTE_PRELOADED | ExUnit |
-| 0x43   | COMPUTE_ACCUMULATED | ExUnit |
-| 0x50–0x56 | Loop Config | Configuration |
-| 0x57   | Loop Trigger (Matrix) | Control |
-| 0x60–0x68 | Loop Config (Conv) | Configuration |
-| 0x69   | Loop Trigger (Conv) | Control |
+- **Bits [6:4]**: Bank enable field (encodes memory access type: 000/001/010/011/100 for varying access patterns; 101/110/111 for extended opcodes)
+- **Bits [3:0]**: Operation code
+
+| funct7 | Bits [6:4] | Operation | Type |
+|--------|-----------|-----------|------|
+| 0x02   | 000       | CONFIG    | ExUnit |
+| 0x03   | 000       | FLUSH     | ExUnit |
+| 0x04   | 000       | BDB_COUNTER | Debug |
+| 0x30   | 011       | IM2COL    | Compute |
+| 0x31   | 011       | TRANSPOSE | Compute |
+| 0x32   | 011       | RELU      | Compute |
+| 0x33   | 011       | QUANT     | Compute |
+| 0x34   | 011       | DEQUANT   | Compute |
+| 0x35   | 011       | PRELOAD   | ExUnit |
+| 0x36   | 011       | BDB_BACKDOOR | Debug |
+| 0x40   | 100       | MATMUL_WARP16 | Compute |
+| 0x41   | 100       | SYSTOLIC  | Compute |
+| 0x42   | 100       | COMPUTE_PRELOADED | ExUnit |
+| 0x43   | 100       | COMPUTE_ACCUMULATED | ExUnit |
+| 0x50–0x57 | 101    | Loop WS Config / Loop Trigger (Matrix) | Configuration |
+| 0x60–0x69 | 110    | Loop Conv Config / Loop Trigger (Conv) | Configuration |
 
 ### Execution Paths
 
@@ -135,19 +145,28 @@ Results include:
 
 ### funct7 Encoding Update (Latest)
 
-Recent commits refactored the funct7 encoding scheme to:
-- Separate ExUnit instructions (immediate response paths) from loop control
+Recent commits (March 2026) updated the funct7 encoding scheme to:
+- Encode bank enable bits in [6:4] for memory access pattern tracking
+- Support new operations: IM2COL, TRANSPOSE, RELU, QUANT, DEQUANT, and MATMUL_WARP16
 - Align with updated DISA (Domain-Specific ISA) specification
-- Support new bank enable tracing for debug and profiling
+- Enable instruction tracing with bank access visualization
 
 ### Instruction Tracing
 
 Bank enable support enables:
-- Memory access pattern visualization
-- Performance profiling per memory bank
-- Debugging of data dependencies
+- Memory access pattern visualization per bank
+- Performance profiling of memory operations
+- Debugging of data dependencies and bank conflicts
+
+### Loop Unrollers
+
+Recent GemminiBall enhancements add:
+- **LoopMatmulUnroller**: Blocked matrix multiplication with configurable bounds
+- **LoopConvUnroller**: Convolutional loop unrolling with flexible address generation
+- Both support arbitrary loop nesting and strided memory access
 
 ## See Also
 
+- [Goban Multi-Core Architecture](Goban%20Multi-Core%20Architecture.md) — Multi-core configurations using GemminiBall
 - [Buckyball ISA Documentation](../Overview/Buckyball%20ISA.md)
 - [Building Your Own Hardware Designs](../Tutorial/Building%20Your%20Own%20Hardware%20Designs.md)

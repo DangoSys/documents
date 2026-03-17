@@ -27,19 +27,29 @@ GemminiBall 通过以下配置寄存器维护状态：
 
 ## 按 funct7 指令路由
 
-GemminiBall 根据 `funct7` 字段分发指令：
+GemminiBall 根据 `funct7` 字段分发指令。该字段分区为：
 
-| funct7 | 操作 | 类型 |
-|--------|------|------|
-| 0x02   | CONFIG | ExUnit |
-| 0x03   | FLUSH | ExUnit |
-| 0x35   | PRELOAD | ExUnit |
-| 0x42   | COMPUTE_PRELOADED | ExUnit |
-| 0x43   | COMPUTE_ACCUMULATED | ExUnit |
-| 0x50–0x56 | 循环配置 | 配置 |
-| 0x57   | 循环触发（矩阵） | 控制 |
-| 0x60–0x68 | 循环配置（卷积） | 配置 |
-| 0x69   | 循环触发（卷积） | 控制 |
+- **位 [6:4]**：银行使能字段（编码内存访问类型：000/001/010/011/100 用于不同访问模式；101/110/111 用于扩展操作码）
+- **位 [3:0]**：操作码
+
+| funct7 | 位 [6:4] | 操作 | 类型 |
+|--------|-----------|------|------|
+| 0x02   | 000       | CONFIG | ExUnit |
+| 0x03   | 000       | FLUSH | ExUnit |
+| 0x04   | 000       | BDB_COUNTER | 调试 |
+| 0x30   | 011       | IM2COL | 计算 |
+| 0x31   | 011       | TRANSPOSE | 计算 |
+| 0x32   | 011       | RELU | 计算 |
+| 0x33   | 011       | QUANT | 计算 |
+| 0x34   | 011       | DEQUANT | 计算 |
+| 0x35   | 011       | PRELOAD | ExUnit |
+| 0x36   | 011       | BDB_BACKDOOR | 调试 |
+| 0x40   | 100       | MATMUL_WARP16 | 计算 |
+| 0x41   | 100       | SYSTOLIC | 计算 |
+| 0x42   | 100       | COMPUTE_PRELOADED | ExUnit |
+| 0x43   | 100       | COMPUTE_ACCUMULATED | ExUnit |
+| 0x50–0x57 | 101    | Loop WS Config / Loop Trigger (Matrix) | 配置 |
+| 0x60–0x69 | 110    | Loop Conv Config / Loop Trigger (Conv) | 配置 |
 
 ### 执行路径
 
@@ -50,28 +60,28 @@ GemminiBall 根据 `funct7` 字段分发指令：
 **配置路径**（循环配置）：
 - 立即响应（单周期）
 - 存储配置寄存器
-- 包含 ROB 元数据追踪
+- 为元数据关联包含 ROB 追踪
 
 ## 指令格式
 
 ### ExUnit 指令
 
-ExUnit 指令遵循标准 Blink 命令格式，具有 Gemmini 语义：
+ExUnit 指令遵循标准 Blink 命令格式和 Gemmini 语义：
 
 ```
-字段      | 位    | 描述
-----------|-------|-----------------------------------
-funct7    | [6:0]   | 操作选择器
-rs2/cmd   | [63:0]  | 操作数/配置数据
-rs1       | [31:0]  | 地址/寄存器文件指针
+字段    | 位    | 描述
+--------|-------|-----------------------------------
+funct7  | [6:0] | 操作选择器
+rs2/cmd | [63:0]| 操作数/配置数据
+rs1     | [31:0]| 地址/寄存器文件指针
 ```
 
 ### 循环配置指令
 
-循环配置使用立即数模式，操作数编码如下：
+循环配置使用立即数模式与操作数编码：
 
 ```
-指令：funct7 | rs2_data（特殊）
+指令: funct7 | rs2_data (特殊)
 funct7 0x50: max_i [47:32], max_j [31:16], max_k [15:0]
 funct7 0x51: dram_addr_a [38:0]
 funct7 0x52: dram_addr_b [38:0]
@@ -83,11 +93,11 @@ funct7 0x56: stride_d [31:0], stride_c [63:32]
 
 ## 寄存器追踪
 
-GemminiBall 通过 `rob_id_reg` 追踪 ROB ID 以维护配置和执行阶段之间的元数据关联。这使得：
+GemminiBall 通过 `rob_id_reg` 追踪 ROB ID，在配置和执行阶段之间维护元数据关联。这实现了：
 
 - 正确的结果路由到重排序缓冲区
-- 分块操作的子操作追踪
-- 管道化配置的一致状态管理
+- 管道化配置的子操作追踪
+- 分块操作的一致状态管理
 
 ## 使用示例
 
@@ -127,27 +137,36 @@ GemminiBall 实现 `BlinkIO` 用于命令接收和响应：
 ### 重排序缓冲区（ROB）
 
 结果包括：
-- `rob_id`: 原始指令 ID，用于乱序执行
-- `is_sub`: 表示子操作状态
-- `sub_rob_id`: 复合操作的二级 ROB 追踪
+- `rob_id`: 用于乱序执行的原始指令 ID
+- `is_sub`: 指示子操作状态
+- `sub_rob_id`: 用于组合操作的辅助 ROB 追踪
 
-## 最近的改进
+## 最近的增强
 
 ### funct7 编码更新（最新）
 
-最近的提交重构了 funct7 编码方案以：
-- 将 ExUnit 指令（立即响应路径）与循环控制分离
-- 与更新的 DISA（领域特定 ISA）规范对齐
-- 支持用于调试和分析的新增银行使能追踪
+最近的提交（2026 年 3 月）更新了 funct7 编码方案以：
+- 在 [6:4] 中编码银行使能位用于内存访问模式追踪
+- 支持新操作：IM2COL、TRANSPOSE、RELU、QUANT、DEQUANT 和 MATMUL_WARP16
+- 与更新的 DISA（特定领域 ISA）规范对齐
+- 启用带银行访问可视化的指令追踪
 
 ### 指令追踪
 
 银行使能支持：
-- 内存访问模式可视化
-- 每个内存银行的性能分析
-- 数据依赖关系的调试
+- 按银行的内存访问模式可视化
+- 内存操作的性能分析
+- 数据依赖性和银行冲突的调试
 
-## 参见
+### 循环展开器
 
-- [Buckyball ISA 文档](../Overview/Buckyball%20ISA.md)
-- [构建自己的硬件设计](../Tutorial/Building%20Your%20Own%20Hardware%20Designs.md)
+最近的 GemminiBall 增强添加了：
+- **LoopMatmulUnroller**: 具有可配置边界的分块矩阵乘法
+- **LoopConvUnroller**: 具有灵活地址生成的卷积循环展开
+- 两者都支持任意循环嵌套和步长内存访问
+
+## 相关文档
+
+- [Goban 多核架构](Goban%20Multi-Core%20Architecture.md) — 使用 GemminiBall 的多核配置
+- [Buckyball ISA Documentation](../Overview/Buckyball%20ISA.md)
+- [Building Your Own Hardware Designs](../Tutorial/Building%20Your%20Own%20Hardware%20Designs.md)
