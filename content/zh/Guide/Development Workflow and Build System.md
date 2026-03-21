@@ -45,16 +45,15 @@ cd buckyball
 1. 安装 bbdev
 2. 编译编译器工具链
 3. 预编译 RTL 源
-4. 安装 bebop（模拟框架）
-5. 预编译测试工作负载
-6. 构建 waveform-mcp 模块
-7. 安装预提交钩子
+4. 预编译测试工作负载
+5. 构建 waveform-mcp 模块
+6. 安装预提交钩子
 
 **选项：**
 
 ```bash
 # 跳过特定步骤
-./scripts/nix/build-all.sh --skip 2 --skip 5
+./scripts/nix/build-all.sh --skip 2 --skip 4
 
 # 详细输出
 ./scripts/nix/build-all.sh --verbose

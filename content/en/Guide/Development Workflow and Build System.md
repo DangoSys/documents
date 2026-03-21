@@ -45,16 +45,15 @@ cd buckyball
 1. Install bbdev
 2. Compile the compiler toolchain
 3. Pre-compile RTL sources
-4. Install bebop (simulation framework)
-5. Pre-compile test workloads
-6. Build waveform-mcp module
-7. Install pre-commit hooks
+4. Pre-compile test workloads
+5. Build waveform-mcp module
+6. Install pre-commit hooks
 
 **Options:**
 
 ```bash
 # Skip specific steps
-./scripts/nix/build-all.sh --skip 2 --skip 5
+./scripts/nix/build-all.sh --skip 2 --skip 4
 
 # Verbose output
 ./scripts/nix/build-all.sh --verbose
