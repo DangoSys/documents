@@ -118,11 +118,51 @@ To generate VCD waveforms for debugging:
 bbdev verilator --run '--batch --vcd out.vcd --binary <test-binary>'
 ```
 
-### Inspection
+### Waveform Inspection
 
 - Open VCD files in GTKWave, Verdi, or similar tools
 - Trace signal behavior across clock cycles
 - Correlate with instruction commit log
+
+### Execution Trace Analysis
+
+Buckyball generates binary trace files (BDB) during simulation containing detailed execution information:
+
+**Available trace types:**
+- `ITRACE`: Instruction issue and completion events with RoB tracking
+- `MTRACE`: Memory access patterns (load/store/DMA operations)
+- `PMCTRACE`: Performance counter events (cache, branch predictions)
+- `CTRACE`: Commit and retire events
+- `BANKTRACE`: Bank access patterns for scoreboard analysis
+
+**Enabling traces:**
+
+Traces are controlled via `bdb_trace_mask` set at simulation start. Individual traces can be enabled/disabled based on domain requirements.
+
+**NDJSON Trace Visualization:**
+
+Recent Buckyball releases enhanced tracing with NDJSON-format output and clock cycle support for timeline visualization:
+
+```bash
+# Generate NDJSON trace with clock cycle info
+bbdev verilator --run '--batch --binary <test-binary>' 2>&1 | tee sim.log
+
+# Visualize RoB activity timeline (requires bdb_ndjson_viz.py)
+python3 arch/scripts/bdb_ndjson_viz.py <trace-file>.ndjson --output rob_timeline.png
+
+# Annotate trace with function/instruction names
+python3 arch/scripts/bdb_ndjson_annotate.py <trace-file>.ndjson --isa <isa-dir>
+```
+
+**Trace record structure:**
+
+Each NDJSON record contains:
+- `clk`: Real RTL clock cycle at capture time
+- `kind`: Event type (issue, complete, alloc, free)
+- `domain_id`: Target domain (ball, mem, gp, etc.)
+- `rob_id`: Reorder buffer entry identifier
+- `instr`: Instruction encoding or operation details
+- Metadata: timings, bank access patterns, cache outcomes
 
 ## Performance Considerations
 
@@ -161,3 +201,5 @@ bbdev verilator --run '--batch --verbose --binary <test-binary>'
 
 - [Building Your Own Hardware Designs](../Tutorial/Building%20Your%20Own%20Hardware%20Designs.md)
 - [Buckyball ISA Documentation](../Overview/Buckyball%20ISA.md)
+- [Execution Tracing and Performance Analysis](Execution%20Tracing%20and%20Performance%20Analysis.md)
+- [Frontend Instruction Scheduling and Bank Aliasing](Frontend%20Instruction%20Scheduling%20and%20Bank%20Aliasing.md)

@@ -268,3 +268,5 @@ nix develop --impure
 - [Verilator 模拟和 CI](Verilator%20Simulation%20and%20CI.md)
 - [GemminiBall 架构](GemminiBall%20Architecture.md)
 - [Buckyball ISA 文档](../Overview/Buckyball%20ISA.md)
+- [前端指令调度和库别名表](Frontend%20Instruction%20Scheduling%20and%20Bank%20Aliasing.md)
+- [执行追踪和性能分析](Execution%20Tracing%20and%20Performance%20Analysis.md)
