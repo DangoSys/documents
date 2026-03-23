@@ -118,11 +118,51 @@ bbdev verilator --run \
 bbdev verilator --run '--batch --vcd out.vcd --binary <test-binary>'
 ```
 
-### 检查
+### 波形检查
 
 - 在 GTKWave、Verdi 或类似工具中打开 VCD 文件
 - 跟踪跨时钟周期的信号行为
 - 与指令提交日志相关联
+
+### 执行追踪分析
+
+Buckyball 在模拟期间生成二进制追踪文件 (BDB)，包含详细的执行信息：
+
+**可用的追踪类型：**
+- `ITRACE`: 指令发起和完成事件，含 RoB 跟踪
+- `MTRACE`: 内存访问模式（load/store/DMA 操作）
+- `PMCTRACE`: 性能计数器事件（缓存、分支预测）
+- `CTRACE`: 提交和退役事件
+- `BANKTRACE`: 计分板的库访问模式
+
+**启用追踪：**
+
+追踪通过模拟启动时设置的 `bdb_trace_mask` 控制。可根据域要求启用/禁用各个追踪。
+
+**NDJSON 追踪可视化：**
+
+最新 Buckyball 版本增强了追踪功能，支持 NDJSON 格式输出和时钟周期支持，用于时间线可视化：
+
+```bash
+# 生成带时钟周期信息的 NDJSON 追踪
+bbdev verilator --run '--batch --binary <test-binary>' 2>&1 | tee sim.log
+
+# 可视化 RoB 活动时间线（需要 bdb_ndjson_viz.py）
+python3 arch/scripts/bdb_ndjson_viz.py <trace-file>.ndjson --output rob_timeline.png
+
+# 用函数/指令名注解追踪
+python3 arch/scripts/bdb_ndjson_annotate.py <trace-file>.ndjson --isa <isa-dir>
+```
+
+**追踪记录结构：**
+
+每个 NDJSON 记录包含：
+- `clk`: 捕获时的真实 RTL 时钟周期
+- `kind`: 事件类型（发起、完成、分配、释放）
+- `domain_id`: 目标域（ball、mem、gp 等）
+- `rob_id`: 重序缓冲条目标识符
+- `instr`: 指令编码或操作详情
+- 元数据: 时序、库访问模式、缓存结果
 
 ## 性能考虑
 
