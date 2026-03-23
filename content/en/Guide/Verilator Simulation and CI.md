@@ -201,3 +201,5 @@ bbdev verilator --run '--batch --verbose --binary <test-binary>'
 
 - [Building Your Own Hardware Designs](../Tutorial/Building%20Your%20Own%20Hardware%20Designs.md)
 - [Buckyball ISA Documentation](../Overview/Buckyball%20ISA.md)
+- [Execution Tracing and Performance Analysis](Execution%20Tracing%20and%20Performance%20Analysis.md)
+- [Frontend Instruction Scheduling and Bank Aliasing](Frontend%20Instruction%20Scheduling%20and%20Bank%20Aliasing.md)
