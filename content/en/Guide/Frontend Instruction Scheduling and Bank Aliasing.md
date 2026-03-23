@@ -12,17 +12,9 @@ The GlobalScheduler manages instruction allocation and issue across multiple exe
 
 ### Key Components
 
-**GlobalROB (Global Reorder Buffer)**
-- Tracks all in-flight instructions across domains
-- Maintains program order for correctness
-- Provides allocation and completion tracking
-- Supports fence and barrier semantics for synchronization
+The **GlobalROB (Global Reorder Buffer)** tracks all in-flight instructions across multiple execution domains, maintaining program order to ensure correctness. It provides allocation and completion tracking for every instruction, and supports the semantics of fence and barrier instructions for inter-domain synchronization. The GlobalROB is central to the GlobalScheduler's ability to coordinate execution across Ball accelerators, memory operations, and general-purpose units.
 
-**SubROB (Sub Reorder Buffer)**
-- Per-Ball accelerator reorder buffer for sub-domain operations
-- Manages instruction batches within Ball compute kernels
-- Enables high-throughput Ball operation execution
-- Arbitrated write port shared across all accelerators
+The **SubROB (Sub Reorder Buffer)** is dedicated to each Ball accelerator and manages instruction batches within Ball compute kernels. It enables high-throughput Ball operation execution by handling sub-operations within a kernel, and uses an arbitrated write port shared across all accelerators to manage contention. This separation of concerns allows Ball kernels to run at high performance without blocking other execution domains.
 
 ### Instruction Flow
 
@@ -158,68 +150,35 @@ Timeline:
 
 ## Domain-Specific Execution
 
-### Ball Domain (Accelerator)
+The **Ball Domain (Accelerator)** receives commands from the GlobalScheduler with embedded bank rename information, allowing efficient register allocation. The SubROB tracks sub-operations within Ball kernels and uses bank information to guide which register file banks to access. When the Ball unit completes executing a kernel, it signals completion, which updates the GlobalROB and releases associated resources.
 
-- Receives packed command with bank rename information
-- SubROB tracks sub-operations within Ball kernel
-- Bank info guides which register file banks to access
-- Completion marks when Ball unit finishes kernel
+The **Memory Domain (MemDomain)** handles all load, store, and DMA operations issued by the GlobalScheduler. Bank information is used to determine which physical register banks will receive the results, and completion feedback is sent after the memory operation commits. This integration with the rename logic ensures that memory results flow correctly into the renamed register namespace.
 
-### Memory Domain (MemDomain)
-
-- Handles load/store and DMA operations
-- Bank info used for result register allocation
-- Completion feedback after memory operation commits
-
-### GP Domain (General Purpose)
-
-- Executes standard ALU and control operations
-- Shares scheduler with Ball and Mem domains
-- Non-blocking issue (fastest completion path)
+The **GP Domain (General Purpose)** executes standard ALU and control-flow operations. It shares the scheduler infrastructure with Ball and Memory domains, allowing seamless interleaving of different instruction types. Instructions issued to GP have the fastest completion path, returning results with minimal latency to the GlobalROB. This non-blocking issue model prevents one type of operation from serializing the entire pipeline.
 
 ## Performance Considerations
 
 ### Throughput Optimization
 
-- **Multiple Issue Ports**: Three parallel issue paths (Ball, Mem, GP) avoid serialization bottleneck
-- **SubROB Arbitration**: Prevents single Ball accelerator from blocking other domains
-- **Renaming**: Eliminates false dependencies through virtual bank mapping
+Multiple issue ports provide three parallel paths for Ball, Memory, and GP instructions, avoiding serialization bottlenecks that would otherwise reduce instruction-per-cycle throughput. The SubROB arbitration mechanism prevents a single Ball accelerator from blocking other execution domains, ensuring that long-running kernels do not starve the memory or general-purpose units. Virtual bank mapping through the BAT eliminates false dependencies by allowing multiple instructions to write to the same virtual bank at different times without causing serialization.
 
 ### Latency Paths
 
-- **Fence**: Overhead is max(in-flight instruction latency) ≥ 1 cycle
-- **Barrier**: Overhead is GlobalROB drain time + external signaling
-- **Ball Issue**: 1 cycle (assuming unit available)
+Fence instructions introduce overhead equal to the maximum latency of in-flight instructions, which is at least one cycle in practice. Barrier instructions incur higher overhead: the GlobalROB must drain completely, then the external barrier signal must be negotiated with other tiles, and finally the next instruction can allocate. The fastest path is Ball issue, which completes in one cycle when the Ball unit is available and not blocked by resource contention.
 
 ### Resource Limits
 
-- GlobalROB depth (typically 32-64 entries): Maximum in-flight instructions
-- SubROB depth (typically 16-32 per Ball): Maximum Ball kernel parallelism
-- Alias pool size: Determines rename pressure; should match ROB depth
+The GlobalROB depth (typically 32-64 entries) sets an upper bound on the number of in-flight instructions across all domains, preventing unbounded growth of instruction state. SubROB depth (typically 16-32 entries per Ball accelerator) limits the parallelism within a single Ball kernel. The alias pool size, determined by the extra bank IDs beyond the virtual banks, must be sized to match or exceed the ROB depth to prevent rename stalls. Careful provisioning of these resources is critical for balancing performance and silicon area.
 
 ## Debugging and Analysis
 
 ### Execution Traces
 
-Enable ITRACE to capture GlobalScheduler behavior:
-
-```bash
-bbdev verilator --run '--batch --binary <test> ...'
-```
-
-Trace records show:
-- Allocation/issue/complete events per ROB entry
-- Domain routing (Ball/Mem/GP)
-- Fence/barrier state transitions
-- Stall reasons (ROB full, domain not ready)
+Enable ITRACE to capture GlobalScheduler behavior, which produces trace records showing allocation, issue, and complete events for each ROB entry. The traces reveal the domain routing decisions (which execution unit received the instruction), fence and barrier state transitions, and stall reasons (such as ROB overflow or a domain not being ready to accept an instruction). Combined with timestamps, these traces enable detailed timeline analysis of instruction flow through the scheduler.
 
 ### Performance Profiling
 
-Use PMCTRACE to measure:
-- Issue rate per domain
-- Stall frequency and cause
-- Average ROB occupancy
-- Rename efficiency (alias reuse ratio)
+Use PMCTRACE to measure issue rates per domain, stall frequency and cause, average ROB occupancy, and rename efficiency (the ratio of alias reuse to fresh allocations). These metrics help identify whether the scheduler is the bottleneck or if a particular execution domain is saturated. High stall frequency in one domain suggests it should be accelerated, while low ROB occupancy suggests the instruction stream itself is the bottleneck.
 
 ### Common Issues
 
