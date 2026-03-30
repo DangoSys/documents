@@ -27,6 +27,7 @@ nix develop
 This command sets up:
 - Scala/Chisel RTL development tools
 - Verilator for hardware simulation
+- Rust toolchain for code generation and utilities
 - C/C++ compiler for software
 - Test frameworks and dependencies
 - Pre-commit hooks
