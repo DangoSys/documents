@@ -27,7 +27,8 @@ nix develop
 此命令设置：
 - Scala/Chisel RTL 开发工具
 - 硬件模拟用的 Verilator
-- C/C++ 编译器
+- 代码生成和工具的 Rust 工具链
+- 软件用的 C/C++ 编译器
 - 测试框架和依赖项
 - 预提交钩子
 

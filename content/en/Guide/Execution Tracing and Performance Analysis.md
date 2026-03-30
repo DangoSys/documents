@@ -8,7 +8,7 @@ Buckyball provides comprehensive execution tracing infrastructure for debugging,
 
 ### Trace Types
 
-Buckyball generates multiple trace streams during simulation, each capturing specific aspects of system behavior. The **ITRACE** stream captures instruction issue and complete events along with RoB entry identifiers, making it ideal for debugging instruction sequencing and identifying stalls. The **MTRACE** stream records memory operations, load/store patterns, and DMA activity for analyzing cache behavior and memory bottlenecks. The **PMCTRACE** stream emits performance counter events including cache hits and misses, enabling system-level profiling and throughput measurement. The **CTRACE** stream logs commit and retire events for verifying program correctness. The **BANKTRACE** stream monitors bank access patterns and scoreboard state, useful for register pressure analysis and rename efficiency assessment.
+Buckyball generates multiple trace streams during simulation, each capturing specific aspects of system behavior. The **ITRACE** stream captures instruction issue and complete events along with RoB entry identifiers and clock cycle timestamps, making it ideal for debugging instruction sequencing and identifying stalls. Each event records the exact clock cycle when the instruction was issued, issued to a domain, or completed. The **MTRACE** stream records memory operations, load/store patterns, and DMA activity for analyzing cache behavior and memory bottlenecks. The **PMCTRACE** stream emits performance counter events including cache hits and misses, enabling system-level profiling and throughput measurement. The **CTRACE** stream logs commit and retire events for verifying program correctness. The **BANKTRACE** stream monitors bank access patterns and scoreboard state, useful for register pressure analysis and rename efficiency assessment.
 
 ### Enabling Traces
 
@@ -54,11 +54,11 @@ Memory trace records document load, store, and DMA operations. Each record speci
 
 ### NDJSON Visualization Script
 
-The `bdb_ndjson_viz.py` script generates a timeline visualization of RoB activity from trace files. It shows the lifetime of each RoB entry (allocation, issue, and completion), instruction issue rates over time, domain utilization (how much Ball, Memory, and GP bandwidth is used), and stall patterns that reveal when no instructions are active. The output is a PNG timeline image that makes it easy to spot performance issues visually.
+The `bdb_ndjson_viz.py` script generates a timeline visualization of RoB activity from trace files. It shows the lifetime of each RoB entry (allocation, issue, and completion), instruction issue rates over time, domain utilization (how much Ball, Memory, and GP bandwidth is used), and stall patterns that reveal when no instructions are active. The visualization includes clock cycle information to precisely align events in time, making it easy to correlate different traces. The output is a PNG timeline image that makes it easy to spot performance issues visually.
 
-### Trace Annotation
+### Trace Annotation Script
 
-The `bdb_ndjson_annotate.py` script enriches traces with symbolic information by cross-referencing instruction encodings against the ISA definitions and symbol tables. It adds function names (via symbol table lookup), instruction mnemonics (decoded from ISA definitions), pretty-printed operands, and call/return markers. Annotated traces are much more readable and make it easier to correlate high-level program behavior with low-level execution patterns.
+The `bdb_ndjson_annotate.py` script enriches traces with symbolic information by cross-referencing instruction encodings against the ISA definitions and symbol tables. It adds function names (via symbol table lookup), instruction mnemonics (decoded from ISA definitions), pretty-printed operands, and call/return markers. Annotated traces are much more readable and make it easier to correlate high-level program behavior with low-level execution patterns. The script preserves clock cycle information to maintain temporal accuracy after annotation.
 
 ### Manual Trace Processing
 
