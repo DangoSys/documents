@@ -7,5 +7,9 @@
   "Guide",
   "GemminiBall Architecture.md",
   "Verilator Simulation and CI.md",
-  "Development Workflow and Build System.md"
+  "Development Workflow and Build System.md",
+  "Architecture",
+  "Frontend Instruction Scheduling and Bank Aliasing.md",
+  "GemminiBall Architecture.md",
+  "Goban Multi-Core Architecture.md",
 ]
