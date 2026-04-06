@@ -29,6 +29,9 @@ nix develop
 - 硬件模拟用的 Verilator
 - 代码生成和工具的 Rust 工具链
 - 软件用的 C/C++ 编译器
+- RISC-V ISA 模拟器（Spike）
+- 设备树编译器（dtc）
+- 跨平台构建用的 CMake
 - 测试框架和依赖项
 - 预提交钩子
 
@@ -65,13 +68,23 @@ cd buckyball
 
 ## bbdev 工具
 
-`bbdev` 是 Buckyball 中硬件模拟和构建管理的主要接口。
+`bbdev` 是 Buckyball 中硬件模拟和构建管理的主要接口。它支持多个模拟后端，并为编译和测试工具提供统一的访问。
 
 ### 基本用法
 
 ```bash
 bbdev <command> [options]
 ```
+
+### 可用后端
+
+`bbdev` 抽象不同的模拟和构建后端：
+
+- **Verilator**: 快速开源 RTL 模拟器用于验证
+- **Spike**: Bebop 协同模拟验证用的 RISC-V 功能模拟器
+- **Compiler**: 硬件代码生成用的基于 MLIR 的工具链
+
+对 `bbdev` 的最近更新包括改进的与 `iii` 工具集的基于 Python 的集成，以及通过 `sardine` 框架增强的测试编排。
 
 ### Verilator 模拟
 
@@ -102,6 +115,7 @@ bbdev verilator --run \
 - `BuckyballToyVerilatorConfig`: 用于单元测试的单核配置
 - `BuckyballGobanVerilatorConfig`: 多核配置（1 瓦片，4 核）具有共享加速器
 - `BuckyballGoban2TileVerilatorConfig`: 多瓦片配置（2 瓦片，8 核）用于 SPMD 工作负载
+- `BebopSpikeVerilatorCosimConfig`: Bebop 向量加速器与 Spike 耦合
 - 自定义配置: 在 Scala 配置文件中定义
 
 **多核模拟：**
@@ -116,7 +130,46 @@ bbdev verilator --run \
     --batch'
 ```
 
-有关详细的多核编程指南，请参阅 [Goban 多核架构](Goban%20Multi-Core%20Architecture.md)。
+**Bebop 向量加速器：**
+
+使用 Spike 耦合运行 Bebop 协同模拟测试：
+
+```bash
+bbdev verilator --run \
+  '--jobs 16 \
+    --binary ctest_bebop_cosim_matmul \
+    --config sims.bebop.BebopSpikeVerilatorCosimConfig \
+    --batch'
+```
+
+详见 [Bebop Spike-Verilator 协同模拟](../Architecture/Bebop%20Spike-Verilator%20Cosimulation.md)。
+
+## 构建工具和依赖
+
+### 核心工具
+
+最新 Buckyball 版本在 Nix 开发环境中包含新的构建和模拟工具：
+
+| 工具 | 用途 | 版本 |
+|------|------|------|
+| Spike | RISC-V ISA 模拟器 | 最新 |
+| CMake | 构建配置 | 3.28+ |
+| 设备树编译器 (dtc) | 设备树处理 | 1.7+ |
+| Java (OpenJDK) | Java 工具（编译器后端） | 17+ |
+
+进入 `nix develop` 时这些工具自动可用。
+
+### 配置和构建
+
+要重建 Spike 或重新生成设备树：
+
+```bash
+# 重建 Spike 模拟器
+nix develop --command -- which spike
+
+# 设备树编译示例
+nix develop --command -- dtc -I dts -O dtb my_design.dts -o my_design.dtb
+```
 
 ## 代码组织
 
@@ -267,7 +320,9 @@ nix develop --impure
 ## 参见
 
 - [Verilator 模拟和 CI](Verilator%20Simulation%20and%20CI.md)
-- [GemminiBall 架构](GemminiBall%20Architecture.md)
+- [Bebop Spike-Verilator 协同模拟](../Architecture/Bebop%20Spike-Verilator%20Cosimulation.md)
+- [向量计算支持](../Architecture/Vector%20Computation%20Support.md)
+- [GemminiBall 架构](../Architecture/GemminiBall%20Architecture.md)
 - [Buckyball ISA 文档](../Overview/Buckyball%20ISA.md)
 - [前端指令调度和库别名表](Frontend%20Instruction%20Scheduling%20and%20Bank%20Aliasing.md)
 - [执行追踪和性能分析](Execution%20Tracing%20and%20Performance%20Analysis.md)
