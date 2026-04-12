@@ -203,3 +203,5 @@ bbdev verilator --run '--batch --verbose --binary <test-binary>'
 - [Buckyball ISA Documentation](../Overview/Buckyball%20ISA.md)
 - [Execution Tracing and Performance Analysis](Execution%20Tracing%20and%20Performance%20Analysis.md)
 - [Frontend Instruction Scheduling and Bank Aliasing](Frontend%20Instruction%20Scheduling%20and%20Bank%20Aliasing.md)
+- [Bebop Spike-Verilator Cosimulation](../Architecture/Bebop%20Spike-Verilator%20Cosimulation.md)
+- [Vector Computation Support](../Architecture/Vector%20Computation%20Support.md)

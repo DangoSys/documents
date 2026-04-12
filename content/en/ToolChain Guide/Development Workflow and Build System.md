@@ -29,6 +29,9 @@ This command sets up:
 - Verilator for hardware simulation
 - Rust toolchain for code generation and utilities
 - C/C++ compiler for software
+- RISC-V ISA simulator (Spike)
+- Device tree compiler (dtc)
+- CMake for cross-platform builds
 - Test frameworks and dependencies
 - Pre-commit hooks
 
@@ -65,13 +68,23 @@ cd buckyball
 
 ## bbdev Tool
 
-`bbdev` is the primary interface for hardware simulation and build management in Buckyball.
+`bbdev` is the primary interface for hardware simulation and build management in Buckyball. It supports multiple simulation backends and provides unified access to tools for compilation and testing.
 
 ### Basic Usage
 
 ```bash
 bbdev <command> [options]
 ```
+
+### Available Backends
+
+`bbdev` abstracts different simulation and build backends:
+
+- **Verilator**: Fast open-source RTL simulator for verification
+- **Spike**: RISC-V functional simulator for Bebop cosimulation verification
+- **Compiler**: MLIR-based toolchain for hardware code generation
+
+Recent updates to `bbdev` include improved Python-based integration with the `iii` toolset and enhanced test orchestration via the `sardine` framework.
 
 ### Verilator Simulation
 
@@ -102,6 +115,7 @@ Available configurations in `sims/verilator/`:
 - `BuckyballToyVerilatorConfig`: Single-core configuration for unit testing
 - `BuckyballGobanVerilatorConfig`: Multi-core configuration (1 tile, 4 cores) with shared accelerators
 - `BuckyballGoban2TileVerilatorConfig`: Multi-tile configuration (2 tiles, 8 cores) for SPMD workloads
+- `BebopSpikeVerilatorCosimConfig`: Bebop vector accelerator with Spike coupling
 - Custom configs: Define in Scala configuration files
 
 **Multi-core Simulation:**
@@ -116,7 +130,48 @@ bbdev verilator --run \
     --batch'
 ```
 
-See [Goban Multi-Core Architecture](Goban%20Multi-Core%20Architecture.md) for detailed multi-core programming guidance.
+**Bebop Vector Accelerator:**
+
+Run Bebop cosimulation tests using Spike coupling:
+
+```bash
+bbdev verilator --run \
+  '--jobs 16 \
+    --binary ctest_bebop_cosim_matmul \
+    --config sims.bebop.BebopSpikeVerilatorCosimConfig \
+    --batch'
+```
+
+See [Bebop Spike-Verilator Cosimulation](../Architecture/Bebop%20Spike-Verilator%20Cosimulation.md) for detailed Bebop verification.
+
+## Build Tools and Dependencies
+
+### Core Tools
+
+Recent Buckyball releases include new build and simulation tools in the Nix development environment:
+
+| Tool | Purpose | Version |
+|------|---------|---------|
+| Spike | RISC-V ISA simulator | Latest |
+| CMake | Build configuration | 3.28+ |
+| Device Tree Compiler (dtc) | Device tree processing | 1.7+ |
+| Java (OpenJDK) | Java-based tools (compiler backends) | 17+ |
+
+These tools are automatically available when entering `nix develop`.
+
+### Configuration and Build
+
+To rebuild Spike or regenerate device trees:
+
+```bash
+# Rebuild Spike simulator
+nix develop --command -- which spike
+
+# Device tree compilation example
+nix develop --command -- dtc -I dts -O dtb my_design.dts -o my_design.dtb
+```
+
+## Simulation Configuration
 
 ## Code Organization
 
@@ -267,7 +322,9 @@ nix develop --impure
 ## See Also
 
 - [Verilator Simulation and CI](Verilator%20Simulation%20and%20CI.md)
-- [GemminiBall Architecture](GemminiBall%20Architecture.md)
+- [Bebop Spike-Verilator Cosimulation](../Architecture/Bebop%20Spike-Verilator%20Cosimulation.md)
+- [Vector Computation Support](../Architecture/Vector%20Computation%20Support.md)
+- [GemminiBall Architecture](../Architecture/GemminiBall%20Architecture.md)
 - [Buckyball ISA Documentation](../Overview/Buckyball%20ISA.md)
 - [Frontend Instruction Scheduling and Bank Aliasing](Frontend%20Instruction%20Scheduling%20and%20Bank%20Aliasing.md)
 - [Execution Tracing and Performance Analysis](Execution%20Tracing%20and%20Performance%20Analysis.md)
