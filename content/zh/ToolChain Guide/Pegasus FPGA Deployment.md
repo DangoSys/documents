@@ -70,23 +70,25 @@ moduleDeps = ... ++ (if (hasPegasus) Seq(pegasus) else Seq.empty)
 
 ### 存储接口（AXI4）
 
+AU280 部署使用 64 位 AXI4 接口，32 位寻址。这与模拟工装接口不同，反映了 AU280 板卡上实际的赛灵思 XDMA + DDR4 配置。DDR4 物理信号由 Vivado 板卡接口自动管理。
+
 #### 写入通道
 
 | 信号 | 宽度 | 方向 | 描述 |
 |------|------|------|------|
-| `chip_mem_awid` | 6 | 输入 | 写入地址 ID |
-| `chip_mem_awaddr` | 33 | 输入 | 写入地址（位 32：完整范围的高位） |
-| `chip_mem_awlen` | 8 | 输入 | 突发长度（0 = 1 拍，15 = 16 拍） |
-| `chip_mem_awsize` | 3 | 输入 | 突发大小编码（0=1B，3=8B，5=32B） |
+| `chip_mem_awid` | 4 | 输入 | 写入地址 ID |
+| `chip_mem_awaddr` | 32 | 输入 | 写入地址 |
+| `chip_mem_awlen` | 8 | 输入 | 突发长度（0 = 1 拍，255 = 256 拍） |
+| `chip_mem_awsize` | 3 | 输入 | 突发大小编码（0=1B，3=8B，6=64B） |
 | `chip_mem_awburst` | 2 | 输入 | 突发类型（FIXED=0，INCR=1，WRAP=2） |
 | `chip_mem_awvalid` | 1 | 输入 | 写入地址有效 |
 | `chip_mem_awready` | 1 | 输出 | 写入地址就绪 |
-| `chip_mem_wdata` | 256 | 输入 | 写入数据（32 字节） |
-| `chip_mem_wstrb` | 32 | 输入 | 写入选通（字节使能） |
+| `chip_mem_wdata` | 64 | 输入 | 写入数据（8 字节） |
+| `chip_mem_wstrb` | 8 | 输入 | 写入选通（字节使能） |
 | `chip_mem_wlast` | 1 | 输入 | 突发中的最后一拍 |
 | `chip_mem_wvalid` | 1 | 输入 | 写入数据有效 |
 | `chip_mem_wready` | 1 | 输出 | 写入数据就绪 |
-| `chip_mem_bid` | 6 | 输出 | 写入响应 ID |
+| `chip_mem_bid` | 4 | 输出 | 写入响应 ID |
 | `chip_mem_bresp` | 2 | 输出 | 写入响应（0=OK，1=EXOK，2=SLVERR，3=DECERR） |
 | `chip_mem_bvalid` | 1 | 输出 | 写入响应有效 |
 | `chip_mem_bready` | 1 | 输入 | 写入响应就绪 |
@@ -95,15 +97,15 @@ moduleDeps = ... ++ (if (hasPegasus) Seq(pegasus) else Seq.empty)
 
 | 信号 | 宽度 | 方向 | 描述 |
 |------|------|------|------|
-| `chip_mem_arid` | 6 | 输入 | 读取地址 ID |
-| `chip_mem_araddr` | 33 | 输入 | 读取地址 |
+| `chip_mem_arid` | 4 | 输入 | 读取地址 ID |
+| `chip_mem_araddr` | 32 | 输入 | 读取地址 |
 | `chip_mem_arlen` | 8 | 输入 | 突发长度 |
 | `chip_mem_arsize` | 3 | 输入 | 突发大小编码 |
 | `chip_mem_arburst` | 2 | 输入 | 突发类型 |
 | `chip_mem_arvalid` | 1 | 输入 | 读取地址有效 |
 | `chip_mem_arready` | 1 | 输出 | 读取地址就绪 |
-| `chip_mem_rid` | 6 | 输出 | 读取数据 ID |
-| `chip_mem_rdata` | 256 | 输出 | 读取数据（32 字节） |
+| `chip_mem_rid` | 4 | 输出 | 读取数据 ID |
+| `chip_mem_rdata` | 64 | 输出 | 读取数据（8 字节） |
 | `chip_mem_rresp` | 2 | 输出 | 读取响应 |
 | `chip_mem_rlast` | 1 | 输出 | 突发中的最后一拍 |
 | `chip_mem_rvalid` | 1 | 输出 | 读取数据有效 |
@@ -191,23 +193,56 @@ mill buckyball.compile --no-test
 # 将 PegasusShell I/O 映射到 Qsys（或原始端口约束）
 ```
 
+### AU280 FPGA 板卡部署
+
+赛灵思 AU280 是 Buckyball FPGA 部署的主要目标板卡。两个专用命令可实现快速原型设计和工作负载执行：
+
+**向 AU280 刷入比特流：**
+
+```bash
+bbdev_pegasus_flashbitstream(bitstream?, serial?, bus_id?)
+```
+
+该命令使用 Vivado 工具将编译的比特流编程到 AU280 FPGA。参数：
+- `bitstream`: .bit 文件的路径（可选；默认为最新编译的比特流）
+- `serial`: AU280 板卡的序列号（可选；如果单板存在则自动检测）
+- `bus_id`: 卡的 PCIe 总线 ID（可选；如果单板存在则自动检测）
+
+刷新过程会自动处理 PCIe 设备移除和重新扫描，确保正确初始化。
+
+**在 AU280 上运行工作负载：**
+
+```bash
+bbdev_pegasus_runworkload(workload?, board?, timeout?, uart?, control?, h2c?)
+```
+
+该命令将 Linux 内核和根文件系统加载到 AU280 的 HBM2 存储器中，并在 SoC 上运行工作负载：
+- `workload`: 可执行文件或测试映像的路径（可选；默认为构建的测试二进制文件）
+- `board`: AU280 序列号（可选；自动检测）
+- `timeout`: 执行超时时间，单位为秒（默认值：60）
+- `uart`: 启用/禁用 UART 日志（默认值：启用）
+- `control`: PCIe 控制通道类型（默认值：h2c）
+- `h2c`: 用于工作负载上传的 H2C DMA 通道（默认值：0）
+
+UART 输出记录到 `arch/log/<timestamp>/pegasus_uart.log`，用于执行后分析和调试。内核已预构建，并通过 DMA 加载到 HBM2 的地址偏移 0x80000000（DDR4 基址）。SoC 中的虚拟地址映射到此物理存储库。
+
+## 存储约束
+
 ## 存储约束
 
 ### 地址范围
 
-AXI4 写入/读取地址总线为 33 位，支持最多 8 GB 的地址空间：
+在 AU280 上，AXI4 地址总线为 32 位，支持最多 4 GB 的地址空间。DDR4 内存在 RISC-V 地址空间中从 0x80000000 开始。通过 PCIe H2C DMA 加载工作负载时，有效传输地址计算为：
 
 ```
-存储映射示例：
-0x000000000 – 0x0FFFFFFFF（4 GB）  [下半部分]
-0x100000000 – 0x1FFFFFFFF（4 GB）  [上半部分，位 32 设置]
+pwrite address = SoC 虚拟地址 - 0x80000000
 ```
 
-确保您的外部存储（HBM 或 DDR）覆盖您的 Buckyball 配置期望的地址范围（通常从 RISC-V 的 0x80000000 开始）。
+此偏移量将 SoC 的 DDR4 基址映射到 H2C 通道的传输窗口的开始。
 
 ### 数据宽度
 
-所有传输使用 256 位（32 字节）宽的数据总线。字节使能（`chip_mem_wstrb`）允许子字写入。
+AU280 部署使用 64 位（8 字节）宽的数据传输，与更大的模拟配置不同。字节使能（`chip_mem_wstrb`）允许子字写入。
 
 ## 调试
 

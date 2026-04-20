@@ -70,23 +70,25 @@ These signals connect to an external PCIe bridge or simulation model.
 
 ### Memory Interface (AXI4)
 
+The AU280 deployment uses a 64-bit AXI4 interface with 32-bit addressing. This is distinct from the simulation harness interface and reflects the actual Xilinx XDMA + DDR4 configuration on the AU280 board. DDR4 physical signals are managed by the Vivado board interface automatically.
+
 #### Write Channel
 
 | Signal | Width | Direction | Description |
 |--------|-------|-----------|-------------|
-| `chip_mem_awid` | 6 | Input | Write address ID |
-| `chip_mem_awaddr` | 33 | Input | Write address (bit 32: high bit for full range) |
-| `chip_mem_awlen` | 8 | Input | Burst length (0 = 1 beat, 15 = 16 beats) |
-| `chip_mem_awsize` | 3 | Input | Burst size encoding (0=1B, 3=8B, 5=32B) |
+| `chip_mem_awid` | 4 | Input | Write address ID |
+| `chip_mem_awaddr` | 32 | Input | Write address |
+| `chip_mem_awlen` | 8 | Input | Burst length (0 = 1 beat, 255 = 256 beats) |
+| `chip_mem_awsize` | 3 | Input | Burst size encoding (0=1B, 3=8B, 6=64B) |
 | `chip_mem_awburst` | 2 | Input | Burst type (FIXED=0, INCR=1, WRAP=2) |
 | `chip_mem_awvalid` | 1 | Input | Write address valid |
 | `chip_mem_awready` | 1 | Output | Write address ready |
-| `chip_mem_wdata` | 256 | Input | Write data (32 bytes) |
-| `chip_mem_wstrb` | 32 | Input | Write strobe (byte enable) |
+| `chip_mem_wdata` | 64 | Input | Write data (8 bytes) |
+| `chip_mem_wstrb` | 8 | Input | Write strobe (byte enable) |
 | `chip_mem_wlast` | 1 | Input | Last beat in burst |
 | `chip_mem_wvalid` | 1 | Input | Write data valid |
 | `chip_mem_wready` | 1 | Output | Write data ready |
-| `chip_mem_bid` | 6 | Output | Write response ID |
+| `chip_mem_bid` | 4 | Output | Write response ID |
 | `chip_mem_bresp` | 2 | Output | Write response (0=OK, 1=EXOK, 2=SLVERR, 3=DECERR) |
 | `chip_mem_bvalid` | 1 | Output | Write response valid |
 | `chip_mem_bready` | 1 | Input | Write response ready |
@@ -95,15 +97,15 @@ These signals connect to an external PCIe bridge or simulation model.
 
 | Signal | Width | Direction | Description |
 |--------|-------|-----------|-------------|
-| `chip_mem_arid` | 6 | Input | Read address ID |
-| `chip_mem_araddr` | 33 | Input | Read address |
+| `chip_mem_arid` | 4 | Input | Read address ID |
+| `chip_mem_araddr` | 32 | Input | Read address |
 | `chip_mem_arlen` | 8 | Input | Burst length |
 | `chip_mem_arsize` | 3 | Input | Burst size encoding |
 | `chip_mem_arburst` | 2 | Input | Burst type |
 | `chip_mem_arvalid` | 1 | Input | Read address valid |
 | `chip_mem_arready` | 1 | Output | Read address ready |
-| `chip_mem_rid` | 6 | Output | Read data ID |
-| `chip_mem_rdata` | 256 | Output | Read data (32 bytes) |
+| `chip_mem_rid` | 4 | Output | Read data ID |
+| `chip_mem_rdata` | 64 | Output | Read data (8 bytes) |
 | `chip_mem_rresp` | 2 | Output | Read response |
 | `chip_mem_rlast` | 1 | Output | Last beat in burst |
 | `chip_mem_rvalid` | 1 | Output | Read data valid |
@@ -191,23 +193,54 @@ mill buckyball.compile --no-test
 # Map PegasusShell I/O to Qsys (or raw port constraints)
 ```
 
+### AU280 FPGA Board Deployment
+
+The Xilinx AU280 is the primary target board for Buckyball FPGA deployment. Two specialized commands enable rapid prototyping and workload execution:
+
+**Flashing Bitstream to AU280:**
+
+```bash
+bbdev_pegasus_flashbitstream(bitstream?, serial?, bus_id?)
+```
+
+This command programs the AU280 FPGA with a compiled bitstream using Vivado tools. Parameters:
+- `bitstream`: Path to the .bit file (optional; defaults to latest compiled bitstream)
+- `serial`: Serial number of the AU280 board (optional; auto-detects if single board present)
+- `bus_id`: PCIe bus ID for the card (optional; auto-detects if single board present)
+
+The flash process handles PCIe device removal and rescanning automatically, ensuring proper initialization.
+
+**Running Workloads on AU280:**
+
+```bash
+bbdev_pegasus_runworkload(workload?, board?, timeout?, uart?, control?, h2c?)
+```
+
+This command loads and executes a Linux kernel and rootfs into the AU280's HBM2 memory and runs the workload on the SoC:
+- `workload`: Path to the executable or test image (optional; defaults to built test binary)
+- `board`: AU280 serial number (optional; auto-detects)
+- `timeout`: Execution timeout in seconds (default: 60)
+- `uart`: Enable/disable UART logging (default: enabled)
+- `control`: PCIe control channel type (default: h2c)
+- `h2c`: H2C DMA channel for workload upload (default: 0)
+
+UART output is logged to `arch/log/<timestamp>/pegasus_uart.log` for post-execution analysis and debugging. The kernel is prebuilt and loaded via DMA into HBM2 at address offset 0x80000000 (DDR4 base). Virtual addresses in the SoC map to this physical memory bank.
+
 ## Memory Constraints
 
 ### Address Range
 
-The AXI4 write/read address bus is 33 bits, supporting up to 8 GB of address space:
+On the AU280, the AXI4 address bus is 32 bits, supporting up to 4 GB of address space. The DDR4 memory starts at 0x80000000 in the RISC-V address space. When loading workloads via PCIe H2C DMA, the effective transfer address is calculated as:
 
 ```
-Memory Map Example:
-0x000000000 – 0x0FFFFFFFF (4 GB)  [Lower half]
-0x100000000 – 0x1FFFFFFFF (4 GB)  [Upper half with bit 32 set]
+pwrite address = SoC virtual address - 0x80000000
 ```
 
-Ensure your external memory (HBM or DDR) covers the address range your Buckyball configuration expects (typically starting at 0x80000000 for RISC-V).
+This offset maps the SoC's DDR4 base address to the start of the H2C channel's transfer window.
 
 ### Data Width
 
-All transfers use 256-bit (32-byte) wide data bus. Byte enables (`chip_mem_wstrb`) allow sub-word writes.
+The AU280 deployment uses 64-bit (8-byte) wide data transfers, distinct from larger simulation configurations. Byte enables (`chip_mem_wstrb`) allow sub-word writes.
 
 ## Debugging
 

@@ -24,7 +24,7 @@ Instruction trace records capture the lifecycle of instructions through the issu
 
 #### Memory Trace (MTRACE)
 
-Memory trace records document load, store, and DMA operations. Each record specifies the operation type (load, store, dma_read, or dma_write), the clock cycle when the operation started, the virtual or physical address, the number of bytes transferred, the hart (core) ID, whether the access hit in cache, and the operation duration in cycles. Analyzing these records reveals access patterns, cache efficiency, and identifies memory subsystem bottlenecks.
+Memory trace records document load, store, and DMA operations. Each record captures the operation type (write or read), shared memory flag, DMA channel, hart ID, virtual bank ID (vbank_id), physical bank ID (pbank_id), group ID, physical address, and data values. The vbank_id represents the virtual address space bank assignment for rename tracking, while pbank_id tracks the actual physical memory bank where the access was routed. Analyzing these records reveals access patterns, bank utilization patterns, cache efficiency, and identifies memory subsystem bottlenecks. The pbank_id field is particularly useful for understanding how virtual addresses map to physical storage across memory domains.
 
 #### Performance Counter Trace (PMCTRACE)
 
