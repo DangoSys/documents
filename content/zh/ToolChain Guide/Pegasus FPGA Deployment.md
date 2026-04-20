@@ -191,6 +191,39 @@ mill buckyball.compile --no-test
 # 将 PegasusShell I/O 映射到 Qsys（或原始端口约束）
 ```
 
+### AU280 FPGA 板卡部署
+
+赛灵思 AU280 是 Buckyball FPGA 部署的主要目标板卡。两个专用命令可实现快速原型设计和工作负载执行：
+
+**向 AU280 刷入比特流：**
+
+```bash
+bbdev_pegasus_flashbitstream(bitstream?, serial?, bus_id?)
+```
+
+该命令使用 Vivado 工具将编译的比特流编程到 AU280 FPGA。参数：
+- `bitstream`: .bit 文件的路径（可选；默认为最新编译的比特流）
+- `serial`: AU280 板卡的序列号（可选；如果单板存在则自动检测）
+- `bus_id`: 卡的 PCIe 总线 ID（可选；如果单板存在则自动检测）
+
+刷新过程会自动处理 PCIe 设备移除和重新扫描，确保正确初始化。
+
+**在 AU280 上运行工作负载：**
+
+```bash
+bbdev_pegasus_runworkload(workload?, board?, timeout?, uart?, control?, h2c?)
+```
+
+该命令将 Linux 内核和根文件系统加载到 AU280 的 HBM2 存储器中，并在 SoC 上运行工作负载：
+- `workload`: 可执行文件或测试映像的路径（可选；默认为构建的测试二进制文件）
+- `board`: AU280 序列号（可选；自动检测）
+- `timeout`: 执行超时时间，单位为秒（默认值：60）
+- `uart`: 启用/禁用 UART 日志（默认值：启用）
+- `control`: PCIe 控制通道类型（默认值：h2c）
+- `h2c`: 用于工作负载上传的 H2C DMA 通道（默认值：0）
+
+UART 输出记录到 `arch/log/<timestamp>/pegasus_uart.log`，用于执行后分析和调试。内核已预构建，并通过 DMA 加载到 HBM2 的地址偏移 0x80000000（DDR4 基址）。SoC 中的虚拟地址映射到此物理存储库。
+
 ## 存储约束
 
 ### 地址范围

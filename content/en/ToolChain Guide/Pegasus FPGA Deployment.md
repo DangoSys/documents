@@ -191,6 +191,39 @@ mill buckyball.compile --no-test
 # Map PegasusShell I/O to Qsys (or raw port constraints)
 ```
 
+### AU280 FPGA Board Deployment
+
+The Xilinx AU280 is the primary target board for Buckyball FPGA deployment. Two specialized commands enable rapid prototyping and workload execution:
+
+**Flashing Bitstream to AU280:**
+
+```bash
+bbdev_pegasus_flashbitstream(bitstream?, serial?, bus_id?)
+```
+
+This command programs the AU280 FPGA with a compiled bitstream using Vivado tools. Parameters:
+- `bitstream`: Path to the .bit file (optional; defaults to latest compiled bitstream)
+- `serial`: Serial number of the AU280 board (optional; auto-detects if single board present)
+- `bus_id`: PCIe bus ID for the card (optional; auto-detects if single board present)
+
+The flash process handles PCIe device removal and rescanning automatically, ensuring proper initialization.
+
+**Running Workloads on AU280:**
+
+```bash
+bbdev_pegasus_runworkload(workload?, board?, timeout?, uart?, control?, h2c?)
+```
+
+This command loads and executes a Linux kernel and rootfs into the AU280's HBM2 memory and runs the workload on the SoC:
+- `workload`: Path to the executable or test image (optional; defaults to built test binary)
+- `board`: AU280 serial number (optional; auto-detects)
+- `timeout`: Execution timeout in seconds (default: 60)
+- `uart`: Enable/disable UART logging (default: enabled)
+- `control`: PCIe control channel type (default: h2c)
+- `h2c`: H2C DMA channel for workload upload (default: 0)
+
+UART output is logged to `arch/log/<timestamp>/pegasus_uart.log` for post-execution analysis and debugging. The kernel is prebuilt and loaded via DMA into HBM2 at address offset 0x80000000 (DDR4 base). Virtual addresses in the SoC map to this physical memory bank.
+
 ## Memory Constraints
 
 ### Address Range
