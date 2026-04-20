@@ -34,6 +34,7 @@ This command sets up:
 - CMake for cross-platform builds
 - Test frameworks and dependencies
 - Pre-commit hooks
+- System utilities (rsync for deployment, Node.js for documentation generation)
 
 ### Full Repository Initialization
 
