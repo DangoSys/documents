@@ -306,27 +306,21 @@ cat /home/MikeNotFound/code/buckyball/arch/log/2025-10-24-16-59-ctest_relu_test_
 
 * **Formal Test**
 
-1. Go back to the `buckyball` directory and run the command
+1. Go back to the `buckyball` directory and run the unified command:
 
-   ```bash
-   bbdev verilator --verilog "--balltype ReluBall --output_dir ReluBall_1"
-   ```
+  ```bash
+  bbdev dc --srcdir arch/ReluBall_1 --top ReluBall
+  ```
 
-   This will generate a Verilog folder for the specified ball under the `arch` directory.
+  This command invokes `evals/run-dc.sh` to run DC synthesis.
 
-2. Grant execution permission to the script:
+2. If you want to combine "Ball Verilog generation + DC synthesis" in one step, run:
 
-   ```bash
-   chmod 777 evals/run-dc.sh
-   ```
+  ```bash
+  bbdev dc --srcdir arch/ReluBall_1 --top ReluBall --balltype ReluBall --output-dir ReluBall_1 --config sims.verilator.BuckyballToyVerilatorConfig
+  ```
 
-3. Run the DC command:
-
-   ```bash
-   ./evals/run-dc.sh --srcdir arch/ReluBall_1 --top ReluBall
-   ```
-
-   This means performing the DC test on the top-level file `ReluBall.sv` located in the `arch/ReluBall_1` folder.
+  This command first generates Verilog into `arch/ReluBall_1`, then runs DC synthesis.
 
 4. You can find the test results in
 

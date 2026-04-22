@@ -304,27 +304,21 @@ cat /home/MikeNotFound/code/buckyball/arch/log/2025-10-24-16-59-ctest_relu_test_
 
 * **正式测试**
 
-1. 回到 `buckyball` 目录，运行命令
+1. 回到 `buckyball` 目录，直接运行统一命令：
 
-   ```bash
-   bbdev verilator --verilog "--balltype ReluBall --output_dir ReluBall_1"
-   ```
+  ```bash
+  bbdev dc --srcdir arch/ReluBall_1 --top ReluBall
+  ```
 
-   这将在 `arch` 目录下生成指定球的 Verilog 文件夹。
+  该命令会调用 `evals/run-dc.sh` 执行 DC 综合。
 
-2. 授予脚本执行权限：
+2. 如果需要把“生成 Ball Verilog + DC 综合”合并成一步，可使用：
 
-   ```bash
-   chmod 777 evals/run-dc.sh
-   ```
+  ```bash
+  bbdev dc --srcdir arch/ReluBall_1 --top ReluBall --balltype ReluBall --output-dir ReluBall_1 --config sims.verilator.BuckyballToyVerilatorConfig
+  ```
 
-3. 运行 DC 命令：
-
-   ```bash
-   ./evals/run-dc.sh --srcdir arch/ReluBall_1 --top ReluBall
-   ```
-
-   这意味着对位于 `arch/ReluBall_1` 文件夹中的顶层文件 `ReluBall.sv` 进行 DC 测试。
+  该命令会先生成 `arch/ReluBall_1` 下的 Verilog，再执行 DC 综合。
 
 4. 可以在以下位置找到测试结果
 
