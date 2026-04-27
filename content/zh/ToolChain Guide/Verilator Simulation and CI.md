@@ -62,6 +62,84 @@ CODE:  0x80000000 – 0x800FFFFF (1 MB 默认)
 STACK: 0x9FFF0000 – 0x9FFFFFFF
 ```
 
+## DRAMSim2 内存模拟
+
+Buckyball 现在包含基于 DRAMSim2 的内存管理，用于更加真实的 DRAM 时序模拟。这将替代简单的魔法内存模型，提供周期精确的 DRAM 行为。
+
+### 概述
+
+DRAMSim2 集成提供了：
+
+- **真实 DRAM 时序**: 模拟实际的 DDR4 存储体冲突、刷新周期和行缓冲行为
+- **可配置内存系统**: 通过 INI 文件支持不同的 DRAM 配置
+- **AXI4 接口**: 标准握手协议，支持按请求 ID 跟踪的读写操作
+- **突发支持**: 处理 AXI4 突发操作（每个事务多个数据传输）
+
+### 架构
+
+提供两种内存后端实现：
+
+1. **`mm_magic_t`**: 简单魔法内存（零周期，用于基线测试）
+   - 立即响应所有请求
+   - 没有时序精度
+   - 用于功能验证
+
+2. **`mm_dramsim2_t`**: 基于 DRAMSim2 的真实内存
+   - 接受 DRAMSim2 配置文件（memory.ini, system.ini）
+   - 跟踪每个 ID 的读写请求队列
+   - 向 DRAMSim2 发送事务并处理回调
+   - 应用可配置的 CPU 时钟频率
+
+### 配置 DRAMSim2
+
+`mm_dramsim2_t` 构造函数接受以下参数：
+
+- `mem_base`: 物理内存基址
+- `mem_size`: 总可寻址内存（必须是 1 MB 的倍数）
+- `word_size`: 数据总线宽度（通常 8 字节）
+- `line_size`: 缓存行大小（DRAMSim2 固定为 64 字节）
+- `clock_hz`: CPU 时钟频率（单位 Hz，传递给 DRAMSim2）
+- `memory_ini`, `system_ini`, `ini_dir`: DRAMSim2 配置文件的路径
+
+### AXI4 请求处理
+
+请求通过独立的读写通道流动：
+
+**读取（AR+R）：**
+- AR 通道提供地址、ID、大小和突发长度
+- 请求被加入队列并发送到 DRAMSim2
+- 读取回调（`read_complete`）按顺序生成带数据的 R 响应
+
+**写入（AW+W+B）：**
+- AW 通道提供写入地址元数据；W 通道提供实际数据
+- 两个通道都必须准备好才能接受写入事务
+- 写入回调（`write_complete`）生成带事务 ID 的 B 响应
+
+### 与 Verilator 框架集成
+
+`BBSimDRAM` 模块通过 DPI-C 连接 Scala/Chisel 与 C++ 内存后端：
+
+```scala
+class BBSimDRAM(
+  memSize:     BigInt,
+  lineSize:    Int,
+  clockFreqHz: BigInt,
+  memBase:     BigInt,
+  params:      AXI4BundleParameters,
+  chipId:      Int
+) extends BlackBox
+```
+
+DPI 函数：`bbsim_memory_init`、`bbsim_memory_tick` 处理初始化和每周期模拟。
+
+### 何时使用 DRAMSim2
+
+- **周期精确基准测试**: 当 DRAM 时序影响结果时
+- **性能分析**: 研究存储体冲突和刷新影响
+- **架构探索**: 评估内存总线宽度或控制器变化
+
+**注意:** DRAMSim2 模拟比魔法内存慢；用于目标分析而非所有测试。
+
 ## 运行 Verilator 模拟
 
 ### 基本测试

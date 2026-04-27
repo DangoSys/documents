@@ -45,10 +45,10 @@ This allows teams with FPGA infrastructure to use Pegasus, while others continue
 
 | Signal | Direction | Description |
 |--------|-----------|-------------|
-| `pcie_sys_clk` | Input | PCIe system clock (typical 100 MHz) |
-| `pcie_sys_clk_gt | Input | PCIe GTX reference clock |
-| `hbm_ref_clk` | Input | External memory reference clock |
-| `dut_clk` | Output | DUT reference clock (derived from `pcie_sys_clk`) |
+| `pcie_refclk_p` / `pcie_refclk_n` | Input | PCIe reference clock differential pair (typically 100 MHz) |
+| `dut_clk` | Output | DUT reference clock (derived from PCIe reference clock) |
+
+The PCIe reference clock is passed as differential signals (positive and negative) following standard PCIe conventions.
 
 ### Reset Signals
 
@@ -117,6 +117,51 @@ The AU280 deployment uses a 64-bit AXI4 interface with 32-bit addressing. This i
 |--------|-----------|-------------|
 | `uart_tx` | Input | UART transmit (currently tied to 1'b1) |
 
+### MMIO Interface (AXI4)
+
+The MMIO (Memory-Mapped I/O) interface is a separate AXI4 channel from `chip_mem`, providing access to control registers and peripherals in the system. This interface connects to Buckyball's MMIO controller and allows driver code to interact with hardware subsystems.
+
+**Write Channel:**
+
+| Signal | Width | Direction | Description |
+|--------|-------|-----------|-------------|
+| `mmio_awid` | 4 | Input | Write address ID |
+| `mmio_awaddr` | 32 | Input | Write address (32-bit addressable) |
+| `mmio_awlen` | 8 | Input | Burst length |
+| `mmio_awsize` | 3 | Input | Burst size encoding |
+| `mmio_awburst` | 2 | Input | Burst type |
+| `mmio_awvalid` | 1 | Input | Write address valid |
+| `mmio_awready` | 1 | Output | Write address ready |
+| `mmio_wdata` | 64 | Input | Write data (8 bytes) |
+| `mmio_wstrb` | 8 | Input | Write strobe (byte enable) |
+| `mmio_wlast` | 1 | Input | Last beat in burst |
+| `mmio_wvalid` | 1 | Input | Write data valid |
+| `mmio_wready` | 1 | Output | Write data ready |
+| `mmio_bid` | 4 | Output | Write response ID |
+| `mmio_bresp` | 2 | Output | Write response (0=OK, 1=EXOK, 2=SLVERR, 3=DECERR) |
+| `mmio_bvalid` | 1 | Output | Write response valid |
+| `mmio_bready` | 1 | Input | Write response ready |
+
+**Read Channel:**
+
+| Signal | Width | Direction | Description |
+|--------|-------|-----------|-------------|
+| `mmio_arid` | 4 | Input | Read address ID |
+| `mmio_araddr` | 32 | Input | Read address |
+| `mmio_arlen` | 8 | Input | Burst length |
+| `mmio_arsize` | 3 | Input | Burst size encoding |
+| `mmio_arburst` | 2 | Input | Burst type |
+| `mmio_arvalid` | 1 | Input | Read address valid |
+| `mmio_arready` | 1 | Output | Read address ready |
+| `mmio_rid` | 4 | Output | Read data ID |
+| `mmio_rdata` | 64 | Output | Read data |
+| `mmio_rresp` | 2 | Output | Read response |
+| `mmio_rlast` | 1 | Output | Last beat in burst |
+| `mmio_rvalid` | 1 | Output | Read data valid |
+| `mmio_rready` | 1 | Input | Read data ready |
+
+The MMIO interface uses the same AXI4 protocol as `chip_mem` but targets peripheral address space. Register access patterns and response timing are implementation-specific; refer to the Pegasus Shell documentation for peripheral mappings.
+
 ## Setup and Configuration
 
 ### Prerequisites
@@ -150,6 +195,10 @@ Target-specific configurations live in `sims/pegasus/`:
 - `PegasusHarness`: Base system wrapper
 - `PegasusHarnessBinders`: AXI4 memory binding and clock wiring
 - Platform-specific configurations (Vivado, Quartus) as needed
+
+### Reference Clock Frequency
+
+The Pegasus harness uses a reference clock frequency of 250 MHz for DUT operations. This is the frequency at which the DUT (`dut_clk`) operates, derived from the PCIe reference clock input. When configuring DRAMSim2 or timing-sensitive workloads, ensure that the CPU clock frequency parameter matches this 250 MHz specification.
 
 ## Running Pegasus Simulations
 
