@@ -62,6 +62,84 @@ CODE:  0x80000000 – 0x800FFFFF (1 MB default)
 STACK: 0x9FFF0000 – 0x9FFFFFFF
 ```
 
+## DRAMSim2 Memory Simulation
+
+Buckyball now includes DRAMSim2-based memory management for more realistic DRAM timing simulation. This replaces the simple magic memory model with cycle-accurate DRAM behavior.
+
+### Overview
+
+DRAMSim2 integration provides:
+
+- **Realistic DRAM timing**: Simulates actual DDR4 bank conflicts, refresh cycles, and row buffer behavior
+- **Configurable memory systems**: Supports different DRAM configurations via INI files
+- **AXI4 interface**: Standard handshake protocol for read/write requests with per-request ID tracking
+- **Burst support**: Handles AXI4 bursts (multiple beats per transaction)
+
+### Architecture
+
+Two memory backend implementations are available:
+
+1. **`mm_magic_t`**: Simple magic memory (zero-cycle, for baseline testing)
+   - Immediately responds to all requests
+   - No timing realism
+   - Useful for functional verification
+
+2. **`mm_dramsim2_t`**: DRAMSim2-based realistic memory
+   - Accepts DRAMSim2 configuration files (memory.ini, system.ini)
+   - Tracks per-ID read/write request queues
+   - Issues transactions to DRAMSim2 and processes callbacks
+   - Applies configurable CPU clock frequency
+
+### Configuring DRAMSim2
+
+The `mm_dramsim2_t` constructor accepts:
+
+- `mem_base`: Physical memory base address
+- `mem_size`: Total addressable memory (must be multiple of 1 MB)
+- `word_size`: Data bus width (typically 8 bytes)
+- `line_size`: Cache line size (fixed at 64 bytes for DRAMSim2)
+- `clock_hz`: CPU clock frequency in Hz (passed to DRAMSim2)
+- `memory_ini`, `system_ini`, `ini_dir`: Path to DRAMSim2 configuration files
+
+### AXI4 Request Handling
+
+Requests flow through separate read and write channels:
+
+**Read (AR+R):**
+- AR channel provides address, ID, size, and burst length
+- Requests are queued and issued to DRAMSim2
+- Read callback (`read_complete`) generates R responses with data in order
+
+**Write (AW+W+B):**
+- AW channel provides write address metadata; W channel provides actual data
+- Both channels must be ready before accepting a write transaction
+- Write callback (`write_complete`) generates B response with transaction ID
+
+### Integration with Verilator Harness
+
+The `BBSimDRAM` module bridges Scala/Chisel to C++ memory backends via DPI-C:
+
+```scala
+class BBSimDRAM(
+  memSize:     BigInt,
+  lineSize:    Int,
+  clockFreqHz: BigInt,
+  memBase:     BigInt,
+  params:      AXI4BundleParameters,
+  chipId:      Int
+) extends BlackBox
+```
+
+DPI functions: `bbsim_memory_init`, `bbsim_memory_tick` handle initialization and per-cycle simulation.
+
+### When to Use DRAMSim2
+
+- **Cycle-accurate benchmarking**: When DRAM timing affects results
+- **Performance analysis**: To study bank conflicts and refresh impact
+- **Architecture exploration**: When evaluating memory bus width or controller changes
+
+**Note:** DRAMSim2 simulation is slower than magic memory; use for targeted analysis rather than all tests.
+
 ## Running Verilator Simulation
 
 ### Basic Test
